@@ -1,0 +1,10 @@
+[package]
+name = "rust-forth-compiler"
+version = "0.2.0"
+authors = ["Frederick Price <rprice@pricemail.ca>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-simple-stack-processor = { git = "https://github.com/rickprice/rust-simple-stack-processor" }
