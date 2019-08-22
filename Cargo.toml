@@ -1,6 +1,6 @@
 [package]
 name = "rust-forth-compiler"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Frederick Price <rprice@pricemail.ca>"]
 edition = "2018"
 
