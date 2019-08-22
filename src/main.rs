@@ -1,12 +1,12 @@
 extern crate rust_simple_stack_processor;
 
 use rust_simple_stack_processor::GasLimit;
-use rust_forth_compiler::forth_compiler::ForthCompiler;
+use rust_forth_compiler::ForthCompiler;
 use rust_forth_compiler::ForthError;
 use std::fs;
 
 fn main() -> Result<(), ForthError> {
-    println!("Hello, world! This is rust_forth");
+    println!("Hello, world! This is rust-forth-compiler");
 
     run()?;
 
