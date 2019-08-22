@@ -1,6 +1,6 @@
 extern crate rust_simple_stack_processor;
 
-use rust_simple_stack_processor::GasLimit;
+pub use rust_simple_stack_processor::GasLimit;
 use rust_simple_stack_processor::Opcode;
 use rust_simple_stack_processor::StackMachine;
 

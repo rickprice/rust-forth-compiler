@@ -1,8 +1,8 @@
 extern crate rust_simple_stack_processor;
 
-use rust_simple_stack_processor::GasLimit;
 use rust_forth_compiler::ForthCompiler;
 use rust_forth_compiler::ForthError;
+use rust_forth_compiler::GasLimit;
 use std::fs;
 
 fn main() -> Result<(), ForthError> {
