@@ -3,8 +3,13 @@ name = "rust-forth-compiler"
 version = "0.3.1"
 authors = ["Frederick Price <rprice@pricemail.ca>"]
 edition = "2018"
-
+license = "MIT"
+description = "A Forth compiler written in Rust"
+homepage = "https://github.com/rickprice/rust-forth-compiler"
+repository = "https://github.com/rickprice/rust-forth-compiler"
+keywords = ["forth","compiler"]
+categories = ["embedded"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-simple-stack-processor = { git = "https://github.com/rickprice/rust-simple-stack-processor" }
+rust-simple-stack-processor = "0.2.0"
