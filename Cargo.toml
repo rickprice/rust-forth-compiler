@@ -1,6 +1,6 @@
 [package]
 name = "rust-forth-compiler"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Frederick Price <rprice@pricemail.ca>"]
 edition = "2018"
 license = "MIT"
@@ -13,3 +13,7 @@ categories = ["embedded"]
 
 [dependencies]
 rust-simple-stack-processor = "0.2.0"
+rust-forth-tokenizer= "0.0.3"
+
+[features]
+track-forth-compiler-metadata=[]

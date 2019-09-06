@@ -3,6 +3,8 @@ extern crate rust_simple_stack_processor;
 pub use rust_simple_stack_processor::GasLimit;
 use rust_simple_stack_processor::Opcode;
 use rust_simple_stack_processor::StackMachine;
+use rust_forth_tokenizer::ForthToken;
+use rust_forth_tokenizer::ForthTokenizer;
 
 mod error;
 
@@ -10,17 +12,6 @@ pub use error::ForthError;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::convert::TryInto;
-
-/// This Enum lists the token types that are used by the Forth interpreter
-#[derive(Debug)]
-pub enum Token {
-    Number(i64),
-    Command(String),
-    Colon(String),
-    SemiColon,
-    End,
-    Error(String),
-}
 
 // This macro lets you statically initialize a hashmap
 macro_rules! hashmap {
@@ -91,8 +82,9 @@ impl DeferredIfStatement {
 }
 
 impl ForthCompiler {
+/*    
     // Take a string containing Forth words and turn it into a list of Forth tokens
-    fn tokenize_string(&self, s: &str) -> Result<Vec<Token>, ForthError> {
+    fn tokenize_string(&self, s: &str) -> Result<Vec<ForthToken>, ForthError> {
         let mut tv = Vec::new();
 
         let mut string_iter = s.split_whitespace();
@@ -130,13 +122,36 @@ impl ForthCompiler {
             }
         }
     }
-
-    fn compile_token_vector_compile_and_remove_word_definitions(
+*/
+    fn compile_tokens_compile_and_remove_word_definitions(
         &mut self,
-        token_vector: &[Token],
+        token_source: &ForthTokenizer,
     ) -> Result<Vec<Opcode>, ForthError> {
         // This is the interactive compiled token list
         let mut tvi = Vec::new();
+
+for token in token_source {
+    match token {
+        ForthToken::Colon => {
+            let mut tvc = Vec::new();
+            for token in token_source {
+
+            }
+
+        },
+        ForthToken::SemiColon=> {
+            return Err(ForthError::SemicolonBeforeColon);
+        }
+        _ => {
+            tvi.push(token);
+        }
+    }
+}
+
+Ok(tvi)
+
+/*
+
         // This tracks whethere we are interpreting or compiling right now
         let mut mode = Mode::Interpreting;
         // This is where we start compiling the latest segment of word/interactive tokens
@@ -149,7 +164,8 @@ impl ForthCompiler {
         // So, for every token we have been passed, check what it is...
         for i in 0..token_vector.len() {
             match &token_vector[i] {
-                Token::Colon(s) => {
+                ForthToken::Colon(s) => {
+
                     // Found Colon, so the user wants to compile a word presumably
                     match mode {
                         // If we are currently interpreting, then we can safely switch to compiling
@@ -177,7 +193,7 @@ impl ForthCompiler {
                         }
                     }
                 }
-                Token::SemiColon => {
+                ForthToken::SemiColon => {
                     match mode {
                         // We are in interpreting mode, this is a syntax error
                         Mode::Interpreting => {
@@ -233,9 +249,10 @@ impl ForthCompiler {
 
         // Return the interactive tokens, the compiled ones are already in memory
         return Ok(tvi);
+*/        
     }
 
-    fn compile_token_vector(&mut self, token_vector: &[Token]) -> Result<Vec<Opcode>, ForthError> {
+    fn compile_token_vector(&mut self, token_vector: &[ForthToken]) -> Result<Vec<Opcode>, ForthError> {
         // Stack of if statements, they are deferred until the THEN Forth word
         let mut deferred_if_statements = Vec::new();
         // List of compiled processor opcodes that we are building up
@@ -244,11 +261,13 @@ impl ForthCompiler {
         // Go through all the Forth tokens and turn them into processor Opcodes (for our StackMachine emulated processor)
         for t in token_vector.iter() {
             match t {
-                Token::Number(n) => {
+                ForthToken::DropLineComment(_)=>(),
+                ForthToken::ParenthesizedRemark(_)=>(),
+                ForthToken::Number(n) => {
                     // Numbers get pushed as a LDI opcode
                     tv.push(Opcode::LDI(*n));
                 }
-                Token::Command(s) => {
+                ForthToken::Command(s) => {
                     // Remember where we are in the list of opcodes in case we hit a IF statement, LOOP etc...
                     let current_instruction = tv.len();
 
@@ -329,17 +348,11 @@ impl ForthCompiler {
                         }
                     }
                 }
-                Token::Colon(_) => {
+                ForthToken::Colon => {
                     panic!("Colon should never reach this function");
                 }
-                Token::SemiColon => {
+                ForthToken::SemiColon => {
                     panic!("SemiColon should never reach this function");
-                }
-                Token::End => {
-                    panic!("Token::End not coded yet");
-                }
-                Token::Error(_) => {
-                    panic!("Token::Error not coded yet");
                 }
             }
         }
@@ -349,12 +362,12 @@ impl ForthCompiler {
         return Ok(tv);
     }
 
-    fn execute_token_vector(
+    fn execute_tokens(
         &mut self,
-        token_vector: &[Token],
+        token_source: &ForthTokenizer,
         gas_limit: GasLimit,
     ) -> Result<(), ForthError> {
-        let mut ol = self.compile_token_vector_compile_and_remove_word_definitions(token_vector)?;
+        let mut ol = self.compile_tokens_compile_and_remove_word_definitions(token_source)?;
         //println!("Compiled Opcodes: {:?}", ol);
         self.sm.st.opcodes.resize(self.last_function, Opcode::NOP);
         self.sm.st.opcodes.append(&mut ol);
@@ -366,8 +379,8 @@ impl ForthCompiler {
     }
 
     pub fn execute_string(&mut self, s: &str, gas_limit: GasLimit) -> Result<(), ForthError> {
-        let tv = self.tokenize_string(s)?;
-        self.execute_token_vector(&tv, gas_limit)?;
+        let tokenizer =ForthTokenizer::new(&s);
+        self.execute_tokens(&tokenizer, gas_limit)?;
         Ok(())
     }
 }
