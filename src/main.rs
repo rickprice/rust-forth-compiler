@@ -50,7 +50,7 @@ fn run() -> Result<(), ForthError> {
 
     assert_eq!(&fc.sm.st.number_stack, &vec![3_i64, 9, 9, 488, 888, 888]);
 
-    let startup = fs::read_to_string("init.forth")?;
+    let startup = fs::read_to_string("init.forth").expect("Test file init.forth not found");
     fc.execute_string(&startup, GasLimit::Limited(100))?;
 
     fc.execute_string(

@@ -12,17 +12,8 @@ pub enum ForthError {
     MissingSemicolonAfterColon,
     MissingCommandAfterColon,
     SemicolonBeforeColon,
-    Io(std::io::Error),
     UnhandledTrap,
     RanOutOfGas,
-}
-
-/// Convert io::Errors to a ForthError so our Interpreter functions can
-/// return a single Error type.
-impl From<std::io::Error> for ForthError {
-    fn from(err: std::io::Error) -> ForthError {
-        ForthError::Io(err)
-    }
 }
 
 /// Convert StackMachineError to a ForthError so our Interpreter functions can
@@ -49,9 +40,8 @@ impl From<ForthError> for i32 {
             ForthError::MissingSemicolonAfterColon => 6,
             ForthError::MissingCommandAfterColon => 7,
             ForthError::SemicolonBeforeColon => 8,
-            ForthError::Io(_) => 9,
-            ForthError::UnhandledTrap => 10,
-            ForthError::RanOutOfGas => 11,
+            ForthError::UnhandledTrap => 9,
+            ForthError::RanOutOfGas => 10,
         }
     }
 }
