@@ -10,6 +10,7 @@ pub enum ForthError {
     PopOfEmptyStack,
     InvalidSyntax(String),
     MissingSemicolonAfterColon,
+    MissingCommandAfterColon,
     SemicolonBeforeColon,
     Io(std::io::Error),
     UnhandledTrap,
@@ -46,10 +47,11 @@ impl From<ForthError> for i32 {
             ForthError::PopOfEmptyStack => 4,
             ForthError::InvalidSyntax(_) => 5,
             ForthError::MissingSemicolonAfterColon => 6,
-            ForthError::SemicolonBeforeColon => 7,
-            ForthError::Io(_) => 8,
-            ForthError::UnhandledTrap => 9,
-            ForthError::RanOutOfGas => 10,
+            ForthError::MissingCommandAfterColon => 7,
+            ForthError::SemicolonBeforeColon => 8,
+            ForthError::Io(_) => 9,
+            ForthError::UnhandledTrap => 10,
+            ForthError::RanOutOfGas => 11,
         }
     }
 }

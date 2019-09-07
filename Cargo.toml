@@ -13,7 +13,7 @@ categories = ["embedded"]
 
 [dependencies]
 rust-simple-stack-processor = "0.2.0"
-rust-forth-tokenizer= "0.0.3"
+rust-forth-tokenizer= "0.0.5"
 
 [features]
 track-forth-compiler-metadata=[]

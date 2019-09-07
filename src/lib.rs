@@ -1,10 +1,10 @@
 extern crate rust_simple_stack_processor;
 
+use rust_forth_tokenizer::ForthToken;
+use rust_forth_tokenizer::ForthTokenizer;
 pub use rust_simple_stack_processor::GasLimit;
 use rust_simple_stack_processor::Opcode;
 use rust_simple_stack_processor::StackMachine;
-use rust_forth_tokenizer::ForthToken;
-use rust_forth_tokenizer::ForthTokenizer;
 
 mod error;
 
@@ -58,13 +58,6 @@ impl ForthCompiler {
     }
 }
 
-/// This Enum determines whether the Forth interpreter is in Interpreting mode or Compiling mode
-#[derive(Debug, PartialEq)]
-enum Mode {
-    Interpreting,
-    Compiling(String),
-}
-
 // This struct tracks information for Forth IF statements
 #[derive(Debug)]
 struct DeferredIfStatement {
@@ -82,47 +75,47 @@ impl DeferredIfStatement {
 }
 
 impl ForthCompiler {
-/*    
-    // Take a string containing Forth words and turn it into a list of Forth tokens
-    fn tokenize_string(&self, s: &str) -> Result<Vec<ForthToken>, ForthError> {
-        let mut tv = Vec::new();
+    /*
+        // Take a string containing Forth words and turn it into a list of Forth tokens
+        fn tokenize_string(&self, s: &str) -> Result<Vec<ForthToken>, ForthError> {
+            let mut tv = Vec::new();
 
-        let mut string_iter = s.split_whitespace();
+            let mut string_iter = s.split_whitespace();
 
-        loop {
-            match string_iter.next() {
-                // If no more text in the string, then return what we have tokenized
-                None => return Ok(tv),
-                // If we have some text to process, then process it
-                Some(string_token) => {
-                    // Try to convert it to a number
-                    tv.push(match string_token.parse::<i64>() {
-                        // We found a number, then return it as a number token
-                        Ok(n) => Token::Number(n),
-                        // Wasn't a number, treat it as a *word*
-                        Err(_) => match string_token {
-                            // If its a colon, create a colon token
-                            ":" => match &string_iter.next() {
-                                // If we found a token, then we need to grab the next bit of text so we know what Forth word is being compiled
-                                Some(next_token) => Token::Colon(next_token.to_string()),
-                                // There has to be something after the colon, so this is an error since we didn't find anything
-                                None => {
-                                    return Err(ForthError::InvalidSyntax(String::from(
-                                        "No token after :, but one needed to compile",
-                                    )))
-                                }
+            loop {
+                match string_iter.next() {
+                    // If no more text in the string, then return what we have tokenized
+                    None => return Ok(tv),
+                    // If we have some text to process, then process it
+                    Some(string_token) => {
+                        // Try to convert it to a number
+                        tv.push(match string_token.parse::<i64>() {
+                            // We found a number, then return it as a number token
+                            Ok(n) => Token::Number(n),
+                            // Wasn't a number, treat it as a *word*
+                            Err(_) => match string_token {
+                                // If its a colon, create a colon token
+                                ":" => match &string_iter.next() {
+                                    // If we found a token, then we need to grab the next bit of text so we know what Forth word is being compiled
+                                    Some(next_token) => Token::Colon(next_token.to_string()),
+                                    // There has to be something after the colon, so this is an error since we didn't find anything
+                                    None => {
+                                        return Err(ForthError::InvalidSyntax(String::from(
+                                            "No token after :, but one needed to compile",
+                                        )))
+                                    }
+                                },
+                                // Create a semicolon token
+                                ";" => Token::SemiColon,
+                                // Whatever else, assume its a Forth word
+                                _ => Token::Command(string_token.to_owned()),
                             },
-                            // Create a semicolon token
-                            ";" => Token::SemiColon,
-                            // Whatever else, assume its a Forth word
-                            _ => Token::Command(string_token.to_owned()),
-                        },
-                    });
+                        });
+                    }
                 }
             }
         }
-    }
-*/
+    */
     fn compile_tokens_compile_and_remove_word_definitions(
         &mut self,
         token_source: &ForthTokenizer,
@@ -130,129 +123,86 @@ impl ForthCompiler {
         // This is the interactive compiled token list
         let mut tvi = Vec::new();
 
-for token in token_source {
-    match token {
-        ForthToken::Colon => {
-            let mut tvc = Vec::new();
-            for token in token_source {
-
-            }
-
-        },
-        ForthToken::SemiColon=> {
-            return Err(ForthError::SemicolonBeforeColon);
-        }
-        _ => {
-            tvi.push(token);
-        }
-    }
-}
-
-Ok(tvi)
-
-/*
-
-        // This tracks whethere we are interpreting or compiling right now
-        let mut mode = Mode::Interpreting;
-        // This is where we start compiling the latest segment of word/interactive tokens
-        let mut starting_position = 0;
-
-        //println!(
-        //    "compile_token_vector_compile_and_remove_word_definitions Compiling Forth tokens {:?}",
-        //    token_vector
-        //);
-        // So, for every token we have been passed, check what it is...
-        for i in 0..token_vector.len() {
-            match &token_vector[i] {
-                ForthToken::Colon(s) => {
-
-                    // Found Colon, so the user wants to compile a word presumably
-                    match mode {
-                        // If we are currently interpreting, then we can safely switch to compiling
-                        Mode::Interpreting => {
-                            // Make sure there is something to compile...
-                            if i > starting_position {
-                                // We end before the current token
-                                // Compile whatever appeared before this compile statement
-                                tvi.append(
-                                    &mut self.compile_token_vector(
-                                        &token_vector[starting_position..i],
-                                    )?,
-                                );
+        // Because we consume tokens in an inner loop, we can't use the normal for loop to read the tokens
+        let mut iter = token_source.into_iter();
+        while let Some(token) = iter.next() {
+            match token {
+                // If a colon token, then compile the word definition
+                ForthToken::Colon => {
+                    // Get the next token which has to be a command token, or its an error, this token will be the name to compile to
+                    if let Some(ForthToken::Command(word_name)) = iter.next() {
+                        // This is the list of tokens we will be compiling
+                        let mut tvc = Vec::new();
+                        let mut found_semicolon = false;
+                        // Because this is an inner loop using the outer iterator, we can't use the normal for loop syntax
+                        while let Some(token) = iter.next() {
+                            match token {
+                                ForthToken::SemiColon => {
+                                    // We have found the end of the word definition, so compile to opcodes and put into memory...
+                                    self.compile_tokens_as_word(word_name, &tvc)?;
+                                    found_semicolon = true;
+                                    break;
+                                }
+                                _ => tvc.push(token),
                             }
-                            // Start compiling again after this token
-                            starting_position = i + 1;
-                            // Switch to compiling mode, remmeber the word we are trying to compile
-                            mode = Mode::Compiling(String::from(s));
                         }
-                        // We are already in compiling mode, so getting a colon is a syntax error
-                        Mode::Compiling(_) => {
-                            return Err(ForthError::InvalidSyntax(
-                                "Second colon before semicolon".to_string(),
-                            ));
+                        if !found_semicolon {
+                            return Err(ForthError::MissingSemicolonAfterColon);
                         }
+                    } else {
+                        // The command token has to be right after the colon token, we don't permit things like comments, we could though...
+                        return Err(ForthError::MissingCommandAfterColon);
                     }
                 }
                 ForthToken::SemiColon => {
-                    match mode {
-                        // We are in interpreting mode, this is a syntax error
-                        Mode::Interpreting => {
-                            return Err(ForthError::InvalidSyntax(
-                                "Semicolon before colon".to_string(),
-                            ));
-                        }
-                        // We have found the end of the word definition, so compile to opcodes and put into memory...
-                        Mode::Compiling(s) => {
-                            // Remove anything extraneous from the end of the opcode array (*processor memory*),
-                            // typically previous immediate mode tokens
-                            self.sm.st.opcodes.resize(self.last_function, Opcode::NOP);
-
-                            // Get the compiled assembler from the token vector
-                            // stop compiling before the ending token
-                            let mut compiled =
-                                self.compile_token_vector(&token_vector[starting_position..i])?;
-                            // Put the return OpCode onto the end
-                            compiled.push(Opcode::RET);
-                            // The current function start is the end of the last function
-                            let function_start = self.last_function;
-                            // Move last function pointer
-                            self.last_function += compiled.len();
-                            // Add the function to the opcode memory
-                            self.sm.st.opcodes.append(&mut compiled);
-                            // Remember where to find it...
-                            self.word_addresses.insert(s, function_start);
-                            // start compiling again after this token
-                            starting_position = i + 1;
-                            // Switch back to interpreting mode
-                            mode = Mode::Interpreting;
-                            //println!("Token Memory {:?}", self.sm.st.opcodes);
-                            //println!("Word Addresses {:?}", self.word_addresses);
-                            //println!("Last function {}", self.last_function);
-                        }
-                    }
+                    return Err(ForthError::SemicolonBeforeColon);
                 }
-                _ => (),
+                _ => {
+                    tvi.push(token);
+                }
             }
         }
 
-        // Check for an error condition and report it
-        // If we are not in interpreting mode when we have processed all the Forth tokens, then that's an error
-        if mode != Mode::Interpreting {
-            return Err(ForthError::MissingSemicolonAfterColon);
-        }
+        let mut compiled_tokens = self.compile_token_vector(&tvi)?;
 
-        // Compile any tokens that remain after processing
-        let mut compiled = self.compile_token_vector(&token_vector[starting_position..])?;
-        tvi.append(&mut compiled);
         // We need to return after running the interactive opcodes, so put the return in now
-        tvi.push(Opcode::RET);
+        compiled_tokens.push(Opcode::RET);
 
-        // Return the interactive tokens, the compiled ones are already in memory
-        return Ok(tvi);
-*/        
+        Ok(compiled_tokens)
     }
 
-    fn compile_token_vector(&mut self, token_vector: &[ForthToken]) -> Result<Vec<Opcode>, ForthError> {
+    fn compile_tokens_as_word(
+        &mut self,
+        word_name: &str,
+        tokens: &[ForthToken],
+    ) -> Result<(), ForthError> {
+        // Remove anything extraneous from the end of the opcode array (*processor memory*),
+        // typically previous immediate mode tokens
+        self.sm.st.opcodes.resize(self.last_function, Opcode::NOP);
+
+        // Get the compiled assembler from the token vector
+        let mut compiled = self.compile_token_vector(tokens)?;
+        // Put the return OpCode onto the end
+        compiled.push(Opcode::RET);
+        // The current function start is the end of the last function
+        let function_start = self.last_function;
+        // Move last function pointer
+        self.last_function += compiled.len();
+        // Add the function to the opcode memory
+        self.sm.st.opcodes.append(&mut compiled);
+        // Remember where to find it...
+        self.word_addresses
+            .insert(word_name.to_owned(), function_start);
+        println!("Token Memory {:?}", self.sm.st.opcodes);
+        println!("Word Addresses {:?}", self.word_addresses);
+        println!("Last function {}", self.last_function);
+        Ok(())
+    }
+
+    fn compile_token_vector(
+        &mut self,
+        token_vector: &[ForthToken],
+    ) -> Result<Vec<Opcode>, ForthError> {
         // Stack of if statements, they are deferred until the THEN Forth word
         let mut deferred_if_statements = Vec::new();
         // List of compiled processor opcodes that we are building up
@@ -261,8 +211,9 @@ Ok(tvi)
         // Go through all the Forth tokens and turn them into processor Opcodes (for our StackMachine emulated processor)
         for t in token_vector.iter() {
             match t {
-                ForthToken::DropLineComment(_)=>(),
-                ForthToken::ParenthesizedRemark(_)=>(),
+                ForthToken::DropLineComment(_) => (),
+                ForthToken::ParenthesizedRemark(_) => (),
+                ForthToken::StringToken(_) => (),
                 ForthToken::Number(n) => {
                     // Numbers get pushed as a LDI opcode
                     tv.push(Opcode::LDI(*n));
@@ -335,7 +286,7 @@ Ok(tvi)
                             }
                         }
                         _ => {
-                            if let Some(offset) = self.word_addresses.get(s) {
+                            if let Some(offset) = self.word_addresses.get(*s) {
                                 tv.push(Opcode::LDI(*offset as i64));
                                 tv.push(Opcode::CALL);
                             } else {
@@ -379,7 +330,7 @@ Ok(tvi)
     }
 
     pub fn execute_string(&mut self, s: &str, gas_limit: GasLimit) -> Result<(), ForthError> {
-        let tokenizer =ForthTokenizer::new(&s);
+        let tokenizer = ForthTokenizer::new(&s);
         self.execute_tokens(&tokenizer, gas_limit)?;
         Ok(())
     }
@@ -489,7 +440,7 @@ mod tests {
             "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
             GasLimit::Limited(100),
         ) {
-            Err(ForthError::UnknownToken(ref x)) if x == "RickTestB" => (),
+            Err(ForthError::MissingCommandAfterColon) => (),
             r => panic!("Incorrect error type returned {:?}", r),
         }
     }
@@ -502,7 +453,7 @@ mod tests {
             "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
             GasLimit::Limited(100),
         ) {
-            Err(ForthError::InvalidSyntax(_)) => (),
+            Err(ForthError::SemicolonBeforeColon) => (),
             r => panic!("Incorrect error type returned {:?}", r),
         }
     }

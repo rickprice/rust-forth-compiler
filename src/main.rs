@@ -16,6 +16,12 @@ fn main() -> Result<(), ForthError> {
 fn run() -> Result<(), ForthError> {
     let mut fc = ForthCompiler::new();
 
+    fc.execute_string(
+        ": RickTest 123 321 ADD 2 MUL ; RickTest",
+        GasLimit::Limited(100),
+    )
+    .unwrap();
+
     //fc.execute_string("1 IF 1 2 ADD ELSE 3 4 ADD THEN", GasLimit::Limited(100))?;
     fc.execute_string("0 IF 1 2 ADD THEN", GasLimit::Limited(100))?;
 

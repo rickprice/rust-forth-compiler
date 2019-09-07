@@ -8,7 +8,7 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/../target/debug/rust_forth_compiler.exe",
+            "program": "${workspaceRoot}/../target/debug/rust-forth-compiler.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
