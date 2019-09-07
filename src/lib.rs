@@ -75,47 +75,6 @@ impl DeferredIfStatement {
 }
 
 impl ForthCompiler {
-    /*
-        // Take a string containing Forth words and turn it into a list of Forth tokens
-        fn tokenize_string(&self, s: &str) -> Result<Vec<ForthToken>, ForthError> {
-            let mut tv = Vec::new();
-
-            let mut string_iter = s.split_whitespace();
-
-            loop {
-                match string_iter.next() {
-                    // If no more text in the string, then return what we have tokenized
-                    None => return Ok(tv),
-                    // If we have some text to process, then process it
-                    Some(string_token) => {
-                        // Try to convert it to a number
-                        tv.push(match string_token.parse::<i64>() {
-                            // We found a number, then return it as a number token
-                            Ok(n) => Token::Number(n),
-                            // Wasn't a number, treat it as a *word*
-                            Err(_) => match string_token {
-                                // If its a colon, create a colon token
-                                ":" => match &string_iter.next() {
-                                    // If we found a token, then we need to grab the next bit of text so we know what Forth word is being compiled
-                                    Some(next_token) => Token::Colon(next_token.to_string()),
-                                    // There has to be something after the colon, so this is an error since we didn't find anything
-                                    None => {
-                                        return Err(ForthError::InvalidSyntax(String::from(
-                                            "No token after :, but one needed to compile",
-                                        )))
-                                    }
-                                },
-                                // Create a semicolon token
-                                ";" => Token::SemiColon,
-                                // Whatever else, assume its a Forth word
-                                _ => Token::Command(string_token.to_owned()),
-                            },
-                        });
-                    }
-                }
-            }
-        }
-    */
     fn compile_tokens_compile_and_remove_word_definitions(
         &mut self,
         token_source: &ForthTokenizer,
