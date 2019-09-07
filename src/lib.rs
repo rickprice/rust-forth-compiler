@@ -193,9 +193,9 @@ impl ForthCompiler {
         // Remember where to find it...
         self.word_addresses
             .insert(word_name.to_owned(), function_start);
-        println!("Token Memory {:?}", self.sm.st.opcodes);
-        println!("Word Addresses {:?}", self.word_addresses);
-        println!("Last function {}", self.last_function);
+        //        println!("Token Memory {:?}", self.sm.st.opcodes);
+        //        println!("Word Addresses {:?}", self.word_addresses);
+        //        println!("Last function {}", self.last_function);
         Ok(())
     }
 
@@ -323,8 +323,8 @@ impl ForthCompiler {
         self.sm.st.opcodes.resize(self.last_function, Opcode::NOP);
         self.sm.st.opcodes.append(&mut ol);
         self.sm.execute(self.last_function, gas_limit)?;
-        println!("Total opcodes defined: {}", self.sm.st.opcodes.len());
-        println!("Total opcodes executed: {}", self.sm.st.gas_used());
+        //println!("Total opcodes defined: {}", self.sm.st.opcodes.len());
+        //println!("Total opcodes executed: {}", self.sm.st.gas_used());
 
         Ok(())
     }
