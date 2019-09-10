@@ -172,7 +172,7 @@ impl ForthCompiler {
             match t {
                 ForthToken::DropLineComment(_) => (),
                 ForthToken::ParenthesizedRemark(_) => (),
-                ForthToken::StringToken(_) => (),
+                ForthToken::StringCommand(_,_) => (),
                 ForthToken::Number(n) => {
                     // Numbers get pushed as a LDI opcode
                     tv.push(Opcode::LDI(*n));
