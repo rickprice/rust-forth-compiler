@@ -1,5 +1,3 @@
-extern crate rust_simple_stack_processor;
-
 use rust_forth_tokenizer::ForthToken;
 use rust_forth_tokenizer::ForthTokenizer;
 pub use rust_simple_stack_processor::GasLimit;
@@ -172,7 +170,7 @@ impl ForthCompiler {
             match t {
                 ForthToken::DropLineComment(_) => (),
                 ForthToken::ParenthesizedRemark(_) => (),
-                ForthToken::StringCommand(_,_) => (),
+                ForthToken::StringCommand(_, _) => (),
                 ForthToken::Number(n) => {
                     // Numbers get pushed as a LDI opcode
                     tv.push(Opcode::LDI(*n));
