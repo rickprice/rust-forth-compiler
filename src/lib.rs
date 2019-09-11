@@ -72,6 +72,27 @@ impl DeferredIfStatement {
     }
 }
 
+// This struct tracks information for Forth Loop statements
+#[derive(Debug)]
+struct DeferredLoopStatement {
+    loop_location: usize,
+    else_location: Option<usize>,
+}
+
+impl DeferredLoopStatement {
+    pub fn new(loop_location: usize) -> DeferredLoopStatement {
+        DeferredLoopStatement {
+            loop_location: loop_location,
+            else_location: None,
+        }
+    }
+}
+
+enum DeferredStatement {
+    If(DeferredIfStatement),
+    Loop(DeferredLoopStatement),
+}
+
 impl ForthCompiler {
     fn compile_tokens_compile_and_remove_word_definitions(
         &mut self,
@@ -161,7 +182,7 @@ impl ForthCompiler {
         token_vector: &[ForthToken],
     ) -> Result<Vec<Opcode>, ForthError> {
         // Stack of if statements, they are deferred until the THEN Forth word
-        let mut deferred_if_statements = Vec::new();
+        let mut deferred_statements = Vec::new();
         // List of compiled processor opcodes that we are building up
         let mut tv: Vec<Opcode> = Vec::new();
 
@@ -181,14 +202,15 @@ impl ForthCompiler {
 
                     match s.as_ref() {
                         "IF" => {
-                            deferred_if_statements
-                                .push(DeferredIfStatement::new(current_instruction));
+                            deferred_statements.push(DeferredStatement::If(
+                                DeferredIfStatement::new(current_instruction),
+                            ));
                             //println!("(IF)Deferred If Stack {:?}", deferred_if_statements);
                             tv.push(Opcode::LDI(0));
                             tv.push(Opcode::JRNZ);
                         }
                         "ELSE" => {
-                            if let Some(x) = deferred_if_statements.last_mut() {
+                            if let Some(DeferredStatement::If(x)) = deferred_statements.last_mut() {
                                 x.else_location = Some(current_instruction);
                                 //println!("(ELSE) Deferred If Stack {:?}", deferred_if_statements);
                                 tv.push(Opcode::LDI(0));
@@ -202,7 +224,7 @@ impl ForthCompiler {
                         "THEN" => {
                             // This only works if there isn't an ELSE statement, it needs to jump differently if there is an ELSE statement
                             //println!("(THEN) Deferred If Stack {:?}", deferred_if_statements);
-                            if let Some(x) = deferred_if_statements.pop() {
+                            if let Some(DeferredStatement::If(x)) = deferred_statements.pop() {
                                 //println!("(if let Some(x)) Deferred If Stack {:?}", x);
                                 let if_jump_location = x.if_location;
                                 let if_jump_offset = match x.else_location {
