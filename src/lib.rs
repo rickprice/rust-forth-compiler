@@ -11,6 +11,9 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 
+#[cfg(test)]
+mod tests;
+
 // This macro lets you statically initialize a hashmap
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{
@@ -82,7 +85,7 @@ enum LoopType {
 // This struct tracks information for Forth Loop statements
 #[derive(Debug)]
 struct DeferredLoopStatement {
-    prelude_start: usize,
+    prelude_start: Option<usize>,
     logical_start: usize,
     loop_type: LoopType,
     leave_location: Option<usize>,
@@ -90,7 +93,7 @@ struct DeferredLoopStatement {
 
 impl DeferredLoopStatement {
     pub fn new(
-        prelude_start: usize,
+        prelude_start: Option<usize>,
         logical_start: usize,
         loop_type: LoopType,
     ) -> DeferredLoopStatement {
@@ -218,18 +221,19 @@ impl ForthCompiler {
                     match s.as_ref() {
                         "DO" => {
                             deferred_statements.push(DeferredStatement::Loop(
-                                DeferredLoopStatement::new(
-                                    current_instruction,
-                                    current_instruction,
-                                    LoopType::Do,
-                                ),
+                                DeferredLoopStatement::new(None, current_instruction, LoopType::Do),
                             ));
                         }
                         "BEGIN" => {
+                            let start_of_loop_code = current_instruction;
+                            // Deal with loop parameters here...
+                            tv.push(Opcode::NOP);
+                            tv.push(Opcode::NOP);
+                            let logical_start_of_loop = tv.len();
                             deferred_statements.push(DeferredStatement::Loop(
                                 DeferredLoopStatement::new(
-                                    current_instruction,
-                                    current_instruction,
+                                    Some(start_of_loop_code),
+                                    logical_start_of_loop,
                                     LoopType::Begin,
                                 ),
                             ));
@@ -240,7 +244,22 @@ impl ForthCompiler {
                         "UNTIL" => {}
                         "WHILE" => {}
                         "REPEAT" => {}
-                        "AGAIN" => {}
+                        "AGAIN" => {
+                            if let Some(DeferredStatement::Loop(loop_def)) =
+                                deferred_statements.pop()
+                            {
+                                let jump_back = i64::try_from(loop_def.logical_start).unwrap()
+                                    - i64::try_from(current_instruction).unwrap()
+                                    // Have to jump back over the JR and the LDI
+                                    - 2;
+                                tv.push(Opcode::LDI(jump_back));
+                                tv.push(Opcode::JR);
+                            } else {
+                                return Err(ForthError::InvalidSyntax(
+                                    "AGAIN without proper loop start like DO".to_owned(),
+                                ));
+                            }
+                        }
                         "IF" => {
                             deferred_statements.push(DeferredStatement::If(
                                 DeferredIfStatement::new(current_instruction),
@@ -352,312 +371,5 @@ impl ForthCompiler {
         let tokenizer = ForthTokenizer::new(&s);
         self.execute_tokens(&tokenizer, gas_limit)?;
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    extern crate rust_simple_stack_processor;
-
-    use rust_simple_stack_processor::StackMachineError;
-    use rust_simple_stack_processor::TrapHandled;
-    use rust_simple_stack_processor::TrapHandler;
-
-    #[test]
-    fn test_execute_intrinsics_1() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string("123 321 ADD 2 MUL", GasLimit::Limited(100))
-            .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![888_i64]);
-
-        fc.execute_string("123 321 ADD 2 MUL", GasLimit::Limited(100))
-            .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![888_i64, 888]);
-    }
-
-    #[test]
-    fn test_compile_1() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string(
-            ": RickTest 123 321 ADD 2 MUL ; RickTest",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![888_i64]);
-
-        fc.execute_string("123 321 ADD 2 MUL RickTest", GasLimit::Limited(100))
-            .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![888_i64, 888, 888]);
-    }
-
-    #[test]
-    fn test_compile_2() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string(
-            ": RickTest 123 321 ADD 2 MUL ; RickTest : RickTestB 123 321 ADD 2 MUL ;",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![888_i64]);
-
-        fc.execute_string("123 321 ADD 2 MUL RickTest", GasLimit::Limited(100))
-            .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![888_i64, 888, 888]);
-    }
-
-    #[test]
-    fn test_compile_3() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string(
-            "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; RickTest : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB POP",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![888_i64]);
-
-        fc.execute_string("123 321 ADD 2 MUL RickTest", GasLimit::Limited(100))
-            .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![888_i64, 888, 888]);
-    }
-
-    #[test]
-    fn test_compile_4() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string(
-            "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![0_i64]);
-
-        fc.execute_string("123 321 ADD 2 MUL RickTest", GasLimit::Limited(100))
-            .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![0_i64, 888, 888]);
-    }
-
-    #[test]
-    fn test_compile_fail_1() {
-        let mut fc = ForthCompiler::new();
-
-        match fc.execute_string(
-            "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
-            GasLimit::Limited(100),
-        ) {
-            Err(ForthError::MissingCommandAfterColon) => (),
-            r => panic!("Incorrect error type returned {:?}", r),
-        }
-    }
-
-    #[test]
-    fn test_compile_fail_2() {
-        let mut fc = ForthCompiler::new();
-
-        match fc.execute_string(
-            "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
-            GasLimit::Limited(100),
-        ) {
-            Err(ForthError::SemicolonBeforeColon) => (),
-            r => panic!("Incorrect error type returned {:?}", r),
-        }
-    }
-
-    #[test]
-    fn test_compile_fail_3() {
-        let mut fc = ForthCompiler::new();
-
-        match fc.execute_string(
-            "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : RickTestB 123 321 ADD 2 MUL ; : ERROR 3 3 SUB",
-            GasLimit::Limited(100),
-        ) {
-            Err(ForthError::MissingSemicolonAfterColon) => (),
-            r => panic!("Incorrect error type returned {:?}", r),
-        }
-    }
-
-    #[test]
-    fn test_if_else_1() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string(
-            "1 2 3 POP POP POP 0 IF 1 2 ADD ELSE 3 4 ADD THEN",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![3_i64]);
-    }
-
-    #[test]
-    fn test_if_else_2() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string(
-            "1 2 3 POP POP POP 1 IF 1 2 ADD ELSE 3 4 ADD THEN",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![7_i64]);
-    }
-
-    #[test]
-    fn test_if_else_3() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string("0 IF 1 2 ADD ELSE 3 4 ADD THEN", GasLimit::Limited(100))
-            .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![3_i64]);
-    }
-
-    #[test]
-    fn test_if_else_4() {
-        let mut fc = ForthCompiler::new();
-
-        fc.execute_string("1 IF 1 2 ADD ELSE 3 4 ADD THEN", GasLimit::Limited(100))
-            .unwrap();
-
-        assert_eq!(&fc.sm.st.number_stack, &vec![7_i64]);
-    }
-
-    #[test]
-    fn test_trap_1() {
-        let mut fc = ForthCompiler::new();
-
-        // Simulate a IO OUT command, at TRAP(100)
-        fc.sm
-            .trap_handlers
-            .push(Box::from(TrapHandler::new(100, |_trap_id, st| {
-                let io_port = st
-                    .number_stack
-                    .pop()
-                    .ok_or(StackMachineError::NumberStackUnderflow)?;
-                let io_value = st
-                    .number_stack
-                    .pop()
-                    .ok_or(StackMachineError::NumberStackUnderflow)?;
-                println!(
-                    "Simulated IO OUT command to Port: {} and Value: {}",
-                    io_port, io_value
-                );
-                Ok(TrapHandled::Handled)
-            })));
-
-        fc.execute_string(
-            ": IO_OUT 100 TRAP ; 123456 1000 IO_OUT",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        // Nothing left over
-        assert_eq!(&fc.sm.st.number_stack, &vec![]);
-    }
-
-    #[test]
-    fn test_trap_2() {
-        let mut fc = ForthCompiler::new();
-
-        // Simulate a IO IN command, at TRAP(101)
-        fc.sm
-            .trap_handlers
-            .push(Box::from(TrapHandler::new(101, |_trap_id, st| {
-                let io_port = st
-                    .number_stack
-                    .pop()
-                    .ok_or(StackMachineError::NumberStackUnderflow)?;
-                let io_value = 654321_i64;
-                println!(
-                    "Simulated IO IN command from Port: {} and Value: {}",
-                    io_port, io_value
-                );
-                st.number_stack.push(io_value);
-                Ok(TrapHandled::Handled)
-            })));
-
-        fc.execute_string(": IO_IN 101 TRAP ; 1000 IO_IN", GasLimit::Limited(100))
-            .unwrap();
-
-        // Value from IO port on stack
-        assert_eq!(&fc.sm.st.number_stack, &vec![654321]);
-    }
-
-    #[test]
-    fn test_trap_3() {
-        let mut fc = ForthCompiler::new();
-
-        // Simulate a IO OUT command, at TRAP(100), but define the port number inside a Forth Word as well
-        fc.sm
-            .trap_handlers
-            .push(Box::from(TrapHandler::new(100, |_trap_id, st| {
-                let io_port = st
-                    .number_stack
-                    .pop()
-                    .ok_or(StackMachineError::NumberStackUnderflow)?;
-                let io_value = st
-                    .number_stack
-                    .pop()
-                    .ok_or(StackMachineError::NumberStackUnderflow)?;
-                println!(
-                    "Simulated IO OUT command to Port: {} and Value: {}",
-                    io_port, io_value
-                );
-                Ok(TrapHandled::Handled)
-            })));
-
-        fc.execute_string(
-            ": IO_OUT 100 TRAP ; : OUT_DISPLAY 1000 IO_OUT ; 123456 OUT_DISPLAY",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        // Nothing left over
-        assert_eq!(&fc.sm.st.number_stack, &vec![]);
-    }
-
-    #[test]
-    fn test_trap_4() {
-        let mut fc = ForthCompiler::new();
-
-        // Simulate a IO IN command, at TRAP(101), but define the port number inside a Forth word as well
-        fc.sm
-            .trap_handlers
-            .push(Box::from(TrapHandler::new(101, |_trap_id, st| {
-                let io_port = st
-                    .number_stack
-                    .pop()
-                    .ok_or(StackMachineError::NumberStackUnderflow)?;
-                let io_value = 654321_i64;
-                println!(
-                    "Simulated IO IN command from Port: {} and Value: {}",
-                    io_port, io_value
-                );
-                st.number_stack.push(io_value);
-                Ok(TrapHandled::Handled)
-            })));
-
-        fc.execute_string(
-            ": IO_IN 101 TRAP ; : IN_KEYBOARD 1000 IO_IN ; IN_KEYBOARD",
-            GasLimit::Limited(100),
-        )
-        .unwrap();
-
-        // Value from IO port on stack
-        assert_eq!(&fc.sm.st.number_stack, &vec![654321]);
     }
 }
