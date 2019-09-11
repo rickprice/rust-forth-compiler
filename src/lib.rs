@@ -75,7 +75,6 @@ impl DeferredIfStatement {
 // Type of loop DO, BEGIN
 #[derive(Debug)]
 enum LoopType {
-    // limit, index
     Do,
     Begin,
 }
