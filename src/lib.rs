@@ -84,6 +84,7 @@ enum LoopType {
 struct DeferredLoopStatement {
     loop_location: usize,
     loop_type: LoopType,
+    leave_location: Option<usize>,
 }
 
 impl DeferredLoopStatement {
@@ -91,6 +92,7 @@ impl DeferredLoopStatement {
         DeferredLoopStatement {
             loop_location: loop_location,
             loop_type: loop_type,
+            leave_location: None,
         }
     }
 }
@@ -218,6 +220,13 @@ impl ForthCompiler {
                                 DeferredLoopStatement::new(current_instruction, LoopType::Begin),
                             ));
                         }
+                        "LOOP" => {}
+                        "+LOOP" => {}
+                        "LEAVE" => {}
+                        "UNTIL" => {}
+                        "WHILE" => {}
+                        "REPEAT" => {}
+                        "AGAIN" => {}
                         "IF" => {
                             deferred_statements.push(DeferredStatement::If(
                                 DeferredIfStatement::new(current_instruction),
