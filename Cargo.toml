@@ -1,6 +1,6 @@
 [package]
 name = "rust-forth-compiler"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Frederick Price <rprice@pricemail.ca>"]
 edition = "2018"
 license = "MIT"
@@ -12,7 +12,7 @@ categories = ["embedded"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-simple-stack-processor = "0.2.0"
+rust-simple-stack-processor = "0.3.0"
 rust-forth-tokenizer= "0.1.0"
 
 [features]

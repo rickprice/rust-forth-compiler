@@ -89,7 +89,11 @@ struct DeferredLoopStatement {
 }
 
 impl DeferredLoopStatement {
-    pub fn new(prelude_start: usize, logical_start: usize, loop_type: LoopType) -> DeferredLoopStatement {
+    pub fn new(
+        prelude_start: usize,
+        logical_start: usize,
+        loop_type: LoopType,
+    ) -> DeferredLoopStatement {
         DeferredLoopStatement {
             prelude_start: prelude_start,
             logical_start: logical_start,
@@ -214,12 +218,20 @@ impl ForthCompiler {
                     match s.as_ref() {
                         "DO" => {
                             deferred_statements.push(DeferredStatement::Loop(
-                                DeferredLoopStatement::new(current_instruction,current_instruction, LoopType::Do),
+                                DeferredLoopStatement::new(
+                                    current_instruction,
+                                    current_instruction,
+                                    LoopType::Do,
+                                ),
                             ));
                         }
                         "BEGIN" => {
                             deferred_statements.push(DeferredStatement::Loop(
-                                DeferredLoopStatement::new(current_instruction, current_instruction, LoopType::Begin),
+                                DeferredLoopStatement::new(
+                                    current_instruction,
+                                    current_instruction,
+                                    LoopType::Begin,
+                                ),
                             ));
                         }
                         "LOOP" => {}

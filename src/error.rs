@@ -7,7 +7,8 @@ use rust_simple_stack_processor::StackMachineError;
 pub enum ForthError {
     UnknownError,
     UnknownToken(String),
-    PopOfEmptyStack,
+    NumberStackUnderflow,
+    LoopStackUnderflow,
     InvalidSyntax(String),
     MissingSemicolonAfterColon,
     MissingCommandAfterColon,
@@ -21,7 +22,8 @@ pub enum ForthError {
 impl From<StackMachineError> for ForthError {
     fn from(err: StackMachineError) -> ForthError {
         match err {
-            StackMachineError::NumberStackUnderflow => ForthError::PopOfEmptyStack,
+            StackMachineError::NumberStackUnderflow => ForthError::NumberStackUnderflow,
+            StackMachineError::LoopStackUnderflow => ForthError::LoopStackUnderflow,
             StackMachineError::UnkownError => ForthError::UnknownError,
             StackMachineError::UnhandledTrap => ForthError::UnhandledTrap,
             StackMachineError::RanOutOfGas => ForthError::RanOutOfGas,
@@ -35,13 +37,14 @@ impl From<ForthError> for i32 {
         match err {
             ForthError::UnknownError => 2,
             ForthError::UnknownToken(_) => 3,
-            ForthError::PopOfEmptyStack => 4,
-            ForthError::InvalidSyntax(_) => 5,
-            ForthError::MissingSemicolonAfterColon => 6,
-            ForthError::MissingCommandAfterColon => 7,
-            ForthError::SemicolonBeforeColon => 8,
-            ForthError::UnhandledTrap => 9,
-            ForthError::RanOutOfGas => 10,
+            ForthError::NumberStackUnderflow => 4,
+            ForthError::LoopStackUnderflow => 5,
+            ForthError::InvalidSyntax(_) => 6,
+            ForthError::MissingSemicolonAfterColon => 7,
+            ForthError::MissingCommandAfterColon => 8,
+            ForthError::SemicolonBeforeColon => 9,
+            ForthError::UnhandledTrap => 10,
+            ForthError::RanOutOfGas => 11,
         }
     }
 }
