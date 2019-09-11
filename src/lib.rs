@@ -88,7 +88,7 @@ struct DeferredLoopStatement {
     prelude_start: Option<usize>,
     logical_start: usize,
     loop_type: LoopType,
-    leave_location: Option<usize>,
+    leave_words: Vec<usize>,
 }
 
 impl DeferredLoopStatement {
@@ -101,7 +101,7 @@ impl DeferredLoopStatement {
             prelude_start: prelude_start,
             logical_start: logical_start,
             loop_type: loop_type,
-            leave_location: None,
+            leave_words: Vec::new(),
         }
     }
 }
@@ -240,7 +240,20 @@ impl ForthCompiler {
                         }
                         "LOOP" => {}
                         "+LOOP" => {}
-                        "LEAVE" => {}
+                        "LEAVE" => {
+                            if let Some(DeferredStatement::Loop(loop_def)) =
+                                deferred_statements.last_mut()
+                            {
+                                loop_def.leave_words.push(current_instruction);
+                                // We fix up the jumps once we get the end of loop
+                                tv.push(Opcode::LDI(0));
+                                tv.push(Opcode::JR);
+                            } else {
+                                return Err(ForthError::InvalidSyntax(
+                                    "LEAVE without proper loop start like DO or BEGIN".to_owned(),
+                                ));
+                            }
+                        }
                         "UNTIL" => {}
                         "WHILE" => {}
                         "REPEAT" => {}
@@ -254,6 +267,14 @@ impl ForthCompiler {
                                     - 2;
                                 tv.push(Opcode::LDI(jump_back));
                                 tv.push(Opcode::JR);
+
+                                let loop_exit_point = tv.len();
+                                for leave_point in loop_def.leave_words {
+                                    let jump_forward = i64::try_from(loop_exit_point).unwrap()
+                                        - i64::try_from(leave_point).unwrap()
+                                        - 1;
+                                    tv[leave_point] = Opcode::LDI(jump_forward);
+                                }
                             } else {
                                 return Err(ForthError::InvalidSyntax(
                                     "AGAIN without proper loop start like DO".to_owned(),

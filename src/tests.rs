@@ -13,9 +13,34 @@ fn test_do_again() {
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
-    assert_eq!(&ol,&vec![Opcode::LDI(123),Opcode::LDI(-3),Opcode::JR,Opcode::RET]);
+    assert_eq!(
+        &ol,
+        &vec![Opcode::LDI(123), Opcode::LDI(-3), Opcode::JR, Opcode::RET]
+    );
+}
 
-    println!("Opcodes: {:?}", ol);
+#[test]
+fn test_do_again_leave() {
+    let tokenizer = ForthTokenizer::new("DO 123 LEAVE 456 LEAVE 789 AGAIN");
+    let mut fc = ForthCompiler::new();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(123),
+            Opcode::LDI(7),
+            Opcode::JR,
+            Opcode::LDI(456),
+            Opcode::LDI(4),
+            Opcode::JR,
+            Opcode::LDI(789),
+            Opcode::LDI(-9),
+            Opcode::JR,
+            Opcode::RET
+        ]
+    );
 }
 
 #[test]
