@@ -72,18 +72,26 @@ impl DeferredIfStatement {
     }
 }
 
+// Type of loop DO, BEGIN
+#[derive(Debug)]
+enum LoopType {
+    // limit, index
+    Do,
+    Begin,
+}
+
 // This struct tracks information for Forth Loop statements
 #[derive(Debug)]
 struct DeferredLoopStatement {
     loop_location: usize,
-    else_location: Option<usize>,
+    loop_type: LoopType,
 }
 
 impl DeferredLoopStatement {
-    pub fn new(loop_location: usize) -> DeferredLoopStatement {
+    pub fn new(loop_location: usize, loop_type: LoopType) -> DeferredLoopStatement {
         DeferredLoopStatement {
             loop_location: loop_location,
-            else_location: None,
+            loop_type: loop_type,
         }
     }
 }
@@ -201,6 +209,16 @@ impl ForthCompiler {
                     let current_instruction = tv.len();
 
                     match s.as_ref() {
+                        "DO" => {
+                            deferred_statements.push(DeferredStatement::Loop(
+                                DeferredLoopStatement::new(current_instruction, LoopType::Do),
+                            ));
+                        }
+                        "BEGIN" => {
+                            deferred_statements.push(DeferredStatement::Loop(
+                                DeferredLoopStatement::new(current_instruction, LoopType::Begin),
+                            ));
+                        }
                         "IF" => {
                             deferred_statements.push(DeferredStatement::If(
                                 DeferredIfStatement::new(current_instruction),
