@@ -88,7 +88,7 @@ struct DeferredLoopStatement {
     prelude_start: Option<usize>,
     logical_start: usize,
     loop_type: LoopType,
-    leave_words: Vec<usize>,
+    jump_out_words: Vec<usize>,
 }
 
 impl DeferredLoopStatement {
@@ -101,7 +101,7 @@ impl DeferredLoopStatement {
             prelude_start: prelude_start,
             logical_start: logical_start,
             loop_type: loop_type,
-            leave_words: Vec::new(),
+            jump_out_words: Vec::new(),
         }
     }
 }
@@ -201,7 +201,7 @@ impl ForthCompiler {
         opcode_vector: &mut Vec<Opcode>,
     ) {
         let loop_exit_point = opcode_vector.len();
-        for leave_point in deferred_loop_statement.leave_words {
+        for leave_point in deferred_loop_statement.jump_out_words {
             let jump_forward =
                 i64::try_from(loop_exit_point).unwrap() - i64::try_from(leave_point).unwrap() - 1;
             opcode_vector[leave_point] = Opcode::LDI(jump_forward);
@@ -232,12 +232,12 @@ impl ForthCompiler {
                     let current_instruction = tv.len();
 
                     match s.as_ref() {
-                        "DO" => {
+                        "BEGIN" => {
                             deferred_statements.push(DeferredStatement::Loop(
                                 DeferredLoopStatement::new(None, current_instruction, LoopType::Do),
                             ));
                         }
-                        "BEGIN" => {
+                        "DO" => {
                             let start_of_loop_code = current_instruction;
                             // Deal with loop parameters here...
                             tv.push(Opcode::NOP);
@@ -257,7 +257,7 @@ impl ForthCompiler {
                             if let Some(DeferredStatement::Loop(loop_def)) =
                                 deferred_statements.last_mut()
                             {
-                                loop_def.leave_words.push(current_instruction);
+                                loop_def.jump_out_words.push(current_instruction);
                                 // We fix up the jumps once we get the end of loop
                                 tv.push(Opcode::LDI(0));
                                 tv.push(Opcode::JR);
@@ -281,12 +281,42 @@ impl ForthCompiler {
                                 self.fixup_loop_exits(loop_def, &mut tv);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
-                                    "UNTIL without proper loop start like DO".to_owned(),
+                                    "UNTIL without proper loop start like BEGIN".to_owned(),
                                 ));
                             }
                         }
-                        "WHILE" => {}
-                        "REPEAT" => {}
+                        "WHILE" => {
+                            if let Some(DeferredStatement::Loop(loop_def)) =
+                                deferred_statements.last_mut()
+                            {
+                                loop_def.jump_out_words.push(current_instruction);
+                                // We fix up the jumps once we get the end of loop
+                                tv.push(Opcode::LDI(0));
+                                tv.push(Opcode::JRZ);
+                            } else {
+                                return Err(ForthError::InvalidSyntax(
+                                    "WHILE without proper loop start like BEGIN".to_owned(),
+                                ));
+                            }
+                        }
+                        "REPEAT" => {
+                            if let Some(DeferredStatement::Loop(loop_def)) =
+                                deferred_statements.pop()
+                            {
+                                let jump_back = i64::try_from(loop_def.logical_start).unwrap()
+                                    - i64::try_from(current_instruction).unwrap()
+                                    // Have to jump back over the JR and the LDI
+                                    - 2;
+                                tv.push(Opcode::LDI(jump_back));
+                                tv.push(Opcode::JR);
+
+                                self.fixup_loop_exits(loop_def, &mut tv);
+                            } else {
+                                return Err(ForthError::InvalidSyntax(
+                                    "AGAIN without proper loop start like DO".to_owned(),
+                                ));
+                            }
+                        }
                         "AGAIN" => {
                             if let Some(DeferredStatement::Loop(loop_def)) =
                                 deferred_statements.pop()

@@ -7,8 +7,49 @@ use rust_simple_stack_processor::TrapHandled;
 use rust_simple_stack_processor::TrapHandler;
 
 #[test]
-fn test_do_again() {
-    let tokenizer = ForthTokenizer::new("DO 123 AGAIN");
+fn test_begin_while_repeat() {
+    let tokenizer = ForthTokenizer::new("BEGIN 123 WHILE 456 REPEAT");
+    let mut fc = ForthCompiler::new();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(123),
+            Opcode::LDI(4),
+            Opcode::JRZ,
+            Opcode::LDI(456),
+            Opcode::LDI(-6),
+            Opcode::JR,
+            Opcode::RET
+        ]
+    );
+}
+#[test]
+fn test_begin_until() {
+    let tokenizer = ForthTokenizer::new("BEGIN 123 LEAVE 456 UNTIL");
+    let mut fc = ForthCompiler::new();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(123),
+            Opcode::LDI(4),
+            Opcode::JR,
+            Opcode::LDI(456),
+            Opcode::LDI(-6),
+            Opcode::JRZ,
+            Opcode::RET
+        ]
+    );
+}
+
+#[test]
+fn test_begin_again() {
+    let tokenizer = ForthTokenizer::new("BEGIN 123 AGAIN");
     let mut fc = ForthCompiler::new();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
@@ -20,8 +61,8 @@ fn test_do_again() {
 }
 
 #[test]
-fn test_do_again_leave() {
-    let tokenizer = ForthTokenizer::new("DO 123 LEAVE 456 LEAVE 789 AGAIN");
+fn test_begin_again_leave() {
+    let tokenizer = ForthTokenizer::new("BEGIN 123 LEAVE 456 LEAVE 789 AGAIN");
     let mut fc = ForthCompiler::new();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
