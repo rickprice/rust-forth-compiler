@@ -195,6 +195,19 @@ impl ForthCompiler {
         Ok(())
     }
 
+    fn fixup_loop_exits(
+        &mut self,
+        deferred_loop_statement: DeferredLoopStatement,
+        opcode_vector: &mut Vec<Opcode>,
+    ) {
+        let loop_exit_point = opcode_vector.len();
+        for leave_point in deferred_loop_statement.leave_words {
+            let jump_forward =
+                i64::try_from(loop_exit_point).unwrap() - i64::try_from(leave_point).unwrap() - 1;
+            opcode_vector[leave_point] = Opcode::LDI(jump_forward);
+        }
+    }
+
     fn compile_token_vector(
         &mut self,
         token_vector: &[ForthToken],
@@ -254,7 +267,24 @@ impl ForthCompiler {
                                 ));
                             }
                         }
-                        "UNTIL" => {}
+                        "UNTIL" => {
+                            if let Some(DeferredStatement::Loop(loop_def)) =
+                                deferred_statements.pop()
+                            {
+                                let jump_back = i64::try_from(loop_def.logical_start).unwrap()
+                                    - i64::try_from(current_instruction).unwrap()
+                                    // Have to jump back over the JR and the LDI
+                                    - 2;
+                                tv.push(Opcode::LDI(jump_back));
+                                tv.push(Opcode::JRZ);
+
+                                self.fixup_loop_exits(loop_def, &mut tv);
+                            } else {
+                                return Err(ForthError::InvalidSyntax(
+                                    "UNTIL without proper loop start like DO".to_owned(),
+                                ));
+                            }
+                        }
                         "WHILE" => {}
                         "REPEAT" => {}
                         "AGAIN" => {
@@ -268,13 +298,7 @@ impl ForthCompiler {
                                 tv.push(Opcode::LDI(jump_back));
                                 tv.push(Opcode::JR);
 
-                                let loop_exit_point = tv.len();
-                                for leave_point in loop_def.leave_words {
-                                    let jump_forward = i64::try_from(loop_exit_point).unwrap()
-                                        - i64::try_from(leave_point).unwrap()
-                                        - 1;
-                                    tv[leave_point] = Opcode::LDI(jump_forward);
-                                }
+                                self.fixup_loop_exits(loop_def, &mut tv);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
                                     "AGAIN without proper loop start like DO".to_owned(),
