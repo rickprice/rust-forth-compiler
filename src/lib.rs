@@ -240,8 +240,7 @@ impl ForthCompiler {
                         "DO" => {
                             let start_of_loop_code = current_instruction;
                             // Deal with loop parameters here...
-                            tv.push(Opcode::NOP);
-                            tv.push(Opcode::NOP);
+                            tv.push(Opcode::PUSHLP);
                             let logical_start_of_loop = tv.len();
                             deferred_statements.push(DeferredStatement::Loop(
                                 DeferredLoopStatement::new(
@@ -251,8 +250,14 @@ impl ForthCompiler {
                                 ),
                             ));
                         }
-                        "LOOP" => {}
-                        "+LOOP" => {}
+                        "LOOP" => {
+                            //self.fixup_loop_exits(loop_def, &mut tv);
+                            tv.push(Opcode::DROPLP);
+                        }
+                        "+LOOP" => {
+                            //self.fixup_loop_exits(loop_def, &mut tv);
+                            tv.push(Opcode::DROPLP);
+                        }
                         "LEAVE" => {
                             if let Some(DeferredStatement::Loop(loop_def)) =
                                 deferred_statements.last_mut()
@@ -279,8 +284,6 @@ impl ForthCompiler {
                                 tv.push(Opcode::JRZ);
 
                                 self.fixup_loop_exits(loop_def, &mut tv);
-
-                                tv.push(Opcode::DROPLP);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
                                     "UNTIL without proper loop start like BEGIN".to_owned(),
@@ -313,8 +316,6 @@ impl ForthCompiler {
                                 tv.push(Opcode::JR);
 
                                 self.fixup_loop_exits(loop_def, &mut tv);
-
-                                tv.push(Opcode::DROPLP);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
                                     "AGAIN without proper loop start like DO".to_owned(),
@@ -333,8 +334,6 @@ impl ForthCompiler {
                                 tv.push(Opcode::JR);
 
                                 self.fixup_loop_exits(loop_def, &mut tv);
-
-                                tv.push(Opcode::DROPLP);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
                                     "AGAIN without proper loop start like DO".to_owned(),

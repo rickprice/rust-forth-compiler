@@ -22,7 +22,6 @@ fn test_begin_while_repeat() {
             Opcode::LDI(456),
             Opcode::LDI(-6),
             Opcode::JR,
-            Opcode::DROPLP,
             Opcode::RET
         ]
     );
@@ -43,7 +42,6 @@ fn test_begin_until() {
             Opcode::LDI(456),
             Opcode::LDI(-6),
             Opcode::JRZ,
-            Opcode::DROPLP,
             Opcode::RET
         ]
     );
@@ -58,13 +56,7 @@ fn test_begin_again() {
         .unwrap();
     assert_eq!(
         &ol,
-        &vec![
-            Opcode::LDI(123),
-            Opcode::LDI(-3),
-            Opcode::JR,
-            Opcode::DROPLP,
-            Opcode::RET
-        ]
+        &vec![Opcode::LDI(123), Opcode::LDI(-3), Opcode::JR, Opcode::RET]
     );
 }
 
@@ -87,7 +79,6 @@ fn test_begin_again_leave() {
             Opcode::LDI(789),
             Opcode::LDI(-9),
             Opcode::JR,
-            Opcode::DROPLP,
             Opcode::RET
         ]
     );
