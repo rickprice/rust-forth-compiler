@@ -252,7 +252,7 @@ impl ForthCompiler {
                         }
                         "DO" => {
                             let start_of_loop_code = current_instruction;
-                            // Deal with loop parameters here...
+                            // This eats the loop parameters from the number stack...
                             tv.push(Opcode::PUSHLP);
                             let logical_start_of_loop = tv.len();
                             deferred_statements.push(DeferredStatement::DoLoop(
@@ -264,11 +264,45 @@ impl ForthCompiler {
                             ));
                         }
                         "LOOP" => {
-                            //self.fixup_loop_exits(loop_def, &mut tv);
+                            if let Some(DeferredStatement::DoLoop(loop_def, loop_exits)) =
+                                deferred_statements.pop()
+                            {
+                                let jump_back = i64::try_from(loop_def.logical_start).unwrap()
+                                    - i64::try_from(current_instruction).unwrap()
+                                    // Have to jump back over the JR and the LDI
+                                    - 2;
+                                tv.push(Opcode::INCLP);
+                                tv.push(Opcode::CMPLOOP);
+                                tv.push(Opcode::LDI(jump_back));
+                                tv.push(Opcode::JRZ);
+
+                                loop_exits.fixup_loop_exits(&mut tv);
+                            } else {
+                                return Err(ForthError::InvalidSyntax(
+                                    "LOOP without proper loop start like DO".to_owned(),
+                                ));
+                            }
                             tv.push(Opcode::DROPLP);
                         }
                         "+LOOP" => {
-                            //self.fixup_loop_exits(loop_def, &mut tv);
+                            if let Some(DeferredStatement::DoLoop(loop_def, loop_exits)) =
+                                deferred_statements.pop()
+                            {
+                                let jump_back = i64::try_from(loop_def.logical_start).unwrap()
+                                    - i64::try_from(current_instruction).unwrap()
+                                    // Have to jump back over the JR and the LDI
+                                    - 2;
+                                tv.push(Opcode::ADDLP);
+                                tv.push(Opcode::CMPLOOP);
+                                tv.push(Opcode::LDI(jump_back));
+                                tv.push(Opcode::JRZ);
+
+                                loop_exits.fixup_loop_exits(&mut tv);
+                            } else {
+                                return Err(ForthError::InvalidSyntax(
+                                    "+LOOP without proper loop start like DO".to_owned(),
+                                ));
+                            }
                             tv.push(Opcode::DROPLP);
                         }
                         "LEAVE" => {
