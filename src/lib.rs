@@ -75,40 +75,65 @@ impl DeferredIfStatement {
     }
 }
 
-// Type of loop DO, BEGIN
-#[derive(Debug)]
-enum LoopType {
-    Do,
-    Begin,
-}
-
 // This struct tracks information for Forth Loop statements
 #[derive(Debug)]
-struct DeferredLoopStatement {
-    prelude_start: Option<usize>,
+struct DeferredDoLoopStatement {
+    prelude_start: usize,
     logical_start: usize,
-    loop_type: LoopType,
-    jump_out_words: Vec<usize>,
 }
 
-impl DeferredLoopStatement {
-    pub fn new(
-        prelude_start: Option<usize>,
-        logical_start: usize,
-        loop_type: LoopType,
-    ) -> DeferredLoopStatement {
-        DeferredLoopStatement {
+impl DeferredDoLoopStatement {
+    pub fn new(prelude_start: usize, logical_start: usize) -> DeferredDoLoopStatement {
+        DeferredDoLoopStatement {
             prelude_start: prelude_start,
             logical_start: logical_start,
-            loop_type: loop_type,
-            jump_out_words: Vec::new(),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct LoopExits {
+    loop_exit_locations: Vec<usize>,
+}
+
+impl LoopExits {
+    pub fn new() -> LoopExits {
+        LoopExits {
+            loop_exit_locations: Vec::new(),
+        }
+    }
+
+    pub fn addExitPoint(&mut self, loop_exit_location: usize) {
+        self.loop_exit_locations.push(loop_exit_location);
+    }
+
+    fn fixup_loop_exits(&self, opcode_vector: &mut Vec<Opcode>) {
+        let loop_exit_point = opcode_vector.len();
+        for leave_point in self.loop_exit_locations {
+            let jump_forward =
+                i64::try_from(loop_exit_point).unwrap() - i64::try_from(leave_point).unwrap() - 1;
+            opcode_vector[leave_point] = Opcode::LDI(jump_forward);
+        }
+    }
+}
+
+#[derive(Debug)]
+struct DeferredBeginLoopStatement {
+    logical_start: usize,
+}
+
+impl DeferredBeginLoopStatement {
+    pub fn new(logical_start: usize) -> DeferredBeginLoopStatement {
+        DeferredBeginLoopStatement {
+            logical_start: logical_start,
         }
     }
 }
 
 enum DeferredStatement {
     If(DeferredIfStatement),
-    Loop(DeferredLoopStatement),
+    DoLoop(DeferredDoLoopStatement, LoopExits),
+    BeginLoop(DeferredBeginLoopStatement, LoopExits),
 }
 
 impl ForthCompiler {
@@ -195,19 +220,6 @@ impl ForthCompiler {
         Ok(())
     }
 
-    fn fixup_loop_exits(
-        &mut self,
-        deferred_loop_statement: DeferredLoopStatement,
-        opcode_vector: &mut Vec<Opcode>,
-    ) {
-        let loop_exit_point = opcode_vector.len();
-        for leave_point in deferred_loop_statement.jump_out_words {
-            let jump_forward =
-                i64::try_from(loop_exit_point).unwrap() - i64::try_from(leave_point).unwrap() - 1;
-            opcode_vector[leave_point] = Opcode::LDI(jump_forward);
-        }
-    }
-
     fn compile_token_vector(
         &mut self,
         token_vector: &[ForthToken],
@@ -233,8 +245,9 @@ impl ForthCompiler {
 
                     match s.as_ref() {
                         "BEGIN" => {
-                            deferred_statements.push(DeferredStatement::Loop(
-                                DeferredLoopStatement::new(None, current_instruction, LoopType::Do),
+                            deferred_statements.push(DeferredStatement::BeginLoop(
+                                DeferredBeginLoopStatement::new(current_instruction),
+                                LoopExits::new(),
                             ));
                         }
                         "DO" => {
@@ -242,12 +255,12 @@ impl ForthCompiler {
                             // Deal with loop parameters here...
                             tv.push(Opcode::PUSHLP);
                             let logical_start_of_loop = tv.len();
-                            deferred_statements.push(DeferredStatement::Loop(
-                                DeferredLoopStatement::new(
-                                    Some(start_of_loop_code),
+                            deferred_statements.push(DeferredStatement::DoLoop(
+                                DeferredDoLoopStatement::new(
+                                    start_of_loop_code,
                                     logical_start_of_loop,
-                                    LoopType::Begin,
                                 ),
+                                LoopExits::new(),
                             ));
                         }
                         "LOOP" => {
@@ -259,21 +272,31 @@ impl ForthCompiler {
                             tv.push(Opcode::DROPLP);
                         }
                         "LEAVE" => {
-                            if let Some(DeferredStatement::Loop(loop_def)) =
-                                deferred_statements.last_mut()
-                            {
-                                loop_def.jump_out_words.push(current_instruction);
+                            if let Some(deferred_statement) = deferred_statements.last_mut() {
+                                let loop_exits =
+                                    match deferred_statement {
+                                        DeferredStatement::DoLoop(_, loop_exits) => loop_exits,
+                                        DeferredStatement::BeginLoop(_, loop_exits) => loop_exits,
+                                        _ => return Err(ForthError::InvalidSyntax(
+                                            "LEAVE without proper loop start like DO or BEGIN(1)"
+                                                .to_owned(),
+                                        )),
+                                    };
+                                // Record the exit point
+                                loop_exits.addExitPoint(current_instruction);
+
                                 // We fix up the jumps once we get the end of loop
                                 tv.push(Opcode::LDI(0));
                                 tv.push(Opcode::JR);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
-                                    "LEAVE without proper loop start like DO or BEGIN".to_owned(),
+                                    "LEAVE without proper loop start like DO or BEGIN(2)"
+                                        .to_owned(),
                                 ));
                             }
                         }
                         "UNTIL" => {
-                            if let Some(DeferredStatement::Loop(loop_def)) =
+                            if let Some(DeferredStatement::BeginLoop(loop_def, loop_exits)) =
                                 deferred_statements.pop()
                             {
                                 let jump_back = i64::try_from(loop_def.logical_start).unwrap()
@@ -283,7 +306,7 @@ impl ForthCompiler {
                                 tv.push(Opcode::LDI(jump_back));
                                 tv.push(Opcode::JRZ);
 
-                                self.fixup_loop_exits(loop_def, &mut tv);
+                                loop_exits.fixup_loop_exits(&mut tv);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
                                     "UNTIL without proper loop start like BEGIN".to_owned(),
@@ -291,10 +314,10 @@ impl ForthCompiler {
                             }
                         }
                         "WHILE" => {
-                            if let Some(DeferredStatement::Loop(loop_def)) =
+                            if let Some(DeferredStatement::BeginLoop(_loop_def, loop_exits)) =
                                 deferred_statements.last_mut()
                             {
-                                loop_def.jump_out_words.push(current_instruction);
+                                loop_exits.addExitPoint(current_instruction);
                                 // We fix up the jumps once we get the end of loop
                                 tv.push(Opcode::LDI(0));
                                 tv.push(Opcode::JRZ);
@@ -305,7 +328,7 @@ impl ForthCompiler {
                             }
                         }
                         "REPEAT" => {
-                            if let Some(DeferredStatement::Loop(loop_def)) =
+                            if let Some(DeferredStatement::DoLoop(loop_def, loop_exits)) =
                                 deferred_statements.pop()
                             {
                                 let jump_back = i64::try_from(loop_def.logical_start).unwrap()
@@ -315,7 +338,7 @@ impl ForthCompiler {
                                 tv.push(Opcode::LDI(jump_back));
                                 tv.push(Opcode::JR);
 
-                                self.fixup_loop_exits(loop_def, &mut tv);
+                                loop_exits.fixup_loop_exits(&mut tv);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
                                     "AGAIN without proper loop start like DO".to_owned(),
@@ -323,7 +346,7 @@ impl ForthCompiler {
                             }
                         }
                         "AGAIN" => {
-                            if let Some(DeferredStatement::Loop(loop_def)) =
+                            if let Some(DeferredStatement::DoLoop(loop_def, loop_exits)) =
                                 deferred_statements.pop()
                             {
                                 let jump_back = i64::try_from(loop_def.logical_start).unwrap()
@@ -333,7 +356,7 @@ impl ForthCompiler {
                                 tv.push(Opcode::LDI(jump_back));
                                 tv.push(Opcode::JR);
 
-                                self.fixup_loop_exits(loop_def, &mut tv);
+                                loop_exits.fixup_loop_exits(&mut tv);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
                                     "AGAIN without proper loop start like DO".to_owned(),
