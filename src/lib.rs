@@ -328,7 +328,7 @@ impl ForthCompiler {
                             }
                         }
                         "REPEAT" => {
-                            if let Some(DeferredStatement::DoLoop(loop_def, loop_exits)) =
+                            if let Some(DeferredStatement::BeginLoop(loop_def, loop_exits)) =
                                 deferred_statements.pop()
                             {
                                 let jump_back = i64::try_from(loop_def.logical_start).unwrap()
@@ -346,7 +346,7 @@ impl ForthCompiler {
                             }
                         }
                         "AGAIN" => {
-                            if let Some(DeferredStatement::DoLoop(loop_def, loop_exits)) =
+                            if let Some(DeferredStatement::BeginLoop(loop_def, loop_exits)) =
                                 deferred_statements.pop()
                             {
                                 let jump_back = i64::try_from(loop_def.logical_start).unwrap()
