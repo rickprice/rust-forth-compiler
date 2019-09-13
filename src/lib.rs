@@ -103,16 +103,16 @@ impl LoopExits {
         }
     }
 
-    pub fn addExitPoint(&mut self, loop_exit_location: usize) {
+    pub fn add_exit_point(&mut self, loop_exit_location: usize) {
         self.loop_exit_locations.push(loop_exit_location);
     }
 
     fn fixup_loop_exits(&self, opcode_vector: &mut Vec<Opcode>) {
         let loop_exit_point = opcode_vector.len();
-        for leave_point in self.loop_exit_locations {
+        for leave_point in self.loop_exit_locations.iter() {
             let jump_forward =
-                i64::try_from(loop_exit_point).unwrap() - i64::try_from(leave_point).unwrap() - 1;
-            opcode_vector[leave_point] = Opcode::LDI(jump_forward);
+                i64::try_from(loop_exit_point).unwrap() - i64::try_from(*leave_point).unwrap() - 1;
+            opcode_vector[*leave_point] = Opcode::LDI(jump_forward);
         }
     }
 }
@@ -283,7 +283,7 @@ impl ForthCompiler {
                                         )),
                                     };
                                 // Record the exit point
-                                loop_exits.addExitPoint(current_instruction);
+                                loop_exits.add_exit_point(current_instruction);
 
                                 // We fix up the jumps once we get the end of loop
                                 tv.push(Opcode::LDI(0));
@@ -317,7 +317,7 @@ impl ForthCompiler {
                             if let Some(DeferredStatement::BeginLoop(_loop_def, loop_exits)) =
                                 deferred_statements.last_mut()
                             {
-                                loop_exits.addExitPoint(current_instruction);
+                                loop_exits.add_exit_point(current_instruction);
                                 // We fix up the jumps once we get the end of loop
                                 tv.push(Opcode::LDI(0));
                                 tv.push(Opcode::JRZ);
