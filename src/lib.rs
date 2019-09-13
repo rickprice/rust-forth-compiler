@@ -341,7 +341,7 @@ impl ForthCompiler {
                                 loop_exits.fixup_loop_exits(&mut tv);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
-                                    "AGAIN without proper loop start like DO".to_owned(),
+                                    "AGAIN without proper loop start like BEGIN".to_owned(),
                                 ));
                             }
                         }
@@ -359,7 +359,7 @@ impl ForthCompiler {
                                 loop_exits.fixup_loop_exits(&mut tv);
                             } else {
                                 return Err(ForthError::InvalidSyntax(
-                                    "AGAIN without proper loop start like DO".to_owned(),
+                                    "AGAIN without proper loop start like BEGIN".to_owned(),
                                 ));
                             }
                         }
