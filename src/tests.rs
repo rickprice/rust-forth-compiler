@@ -7,6 +7,61 @@ use rust_simple_stack_processor::TrapHandled;
 use rust_simple_stack_processor::TrapHandler;
 
 #[test]
+fn test_do_loop() {
+    let tokenizer = ForthTokenizer::new("0 10 DO 123 LEAVE 456 LOOP");
+    let mut fc = ForthCompiler::new();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(0),
+            Opcode::LDI(10),
+            Opcode::PUSHLP,
+            Opcode::LDI(123),
+            Opcode::LDI(6),
+            Opcode::JR,
+            Opcode::LDI(456),
+            Opcode::INCLP,
+            Opcode::CMPLOOP,
+            Opcode::LDI(-6),
+            Opcode::JRZ,
+            Opcode::DROPLP,
+            Opcode::RET
+        ]
+    );
+}
+
+#[test]
+fn test_do_plus_loop() {
+    let tokenizer = ForthTokenizer::new("0 10 DO 123 LEAVE 456 2 +LOOP");
+    let mut fc = ForthCompiler::new();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(0),
+            Opcode::LDI(10),
+            Opcode::PUSHLP,
+            Opcode::LDI(123),
+            Opcode::LDI(7),
+            Opcode::JR,
+            Opcode::LDI(456),
+            Opcode::LDI(2),
+            Opcode::ADDLP,
+            Opcode::CMPLOOP,
+            Opcode::LDI(-7),
+            Opcode::JRZ,
+            Opcode::DROPLP,
+            Opcode::RET
+        ]
+    );
+}
+
+#[test]
 fn test_begin_while_repeat() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 WHILE 456 REPEAT");
     let mut fc = ForthCompiler::new();
