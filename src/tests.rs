@@ -7,6 +7,26 @@ use rust_simple_stack_processor::TrapHandled;
 use rust_simple_stack_processor::TrapHandler;
 
 #[test]
+fn test_i() {
+    let tokenizer = ForthTokenizer::new("I");
+    let mut fc = ForthCompiler::new();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::GETLP, Opcode::RET]);
+}
+
+#[test]
+fn test_j() {
+    let tokenizer = ForthTokenizer::new("J");
+    let mut fc = ForthCompiler::new();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::GETLP2, Opcode::RET]);
+}
+
+#[test]
 fn test_do_loop() {
     let tokenizer = ForthTokenizer::new("0 10 DO 123 LEAVE 456 LOOP");
     let mut fc = ForthCompiler::new();
@@ -30,6 +50,19 @@ fn test_do_loop() {
             Opcode::DROPLP,
             Opcode::RET
         ]
+    );
+}
+
+#[test]
+fn test_do_loop_run_1() {
+    let mut fc = ForthCompiler::new();
+
+    fc.execute_string("0 10 DO I LOOP", GasLimit::Limited(100))
+        .unwrap();
+
+    assert_eq!(
+        &fc.sm.st.number_stack,
+        &vec![0_i64, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     );
 }
 

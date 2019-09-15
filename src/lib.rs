@@ -51,7 +51,9 @@ impl ForthCompiler {
             "DUP" => vec![Opcode::DUP],
             "TRAP" => vec![Opcode::TRAP],
             "INC" => vec![Opcode::LDI(1),Opcode::ADD],
-            "DEC" => vec![Opcode::LDI(-1),Opcode::ADD]
+            "DEC" => vec![Opcode::LDI(-1),Opcode::ADD],
+            "I" => vec![Opcode::GETLP],
+            "J" => vec![Opcode::GETLP2]
             ],
             word_addresses: HashMap::new(),
             last_function: 0,
