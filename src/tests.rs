@@ -76,6 +76,7 @@ fn test_do_loop_simple() {
         ]
     );
 }
+
 #[test]
 fn test_do_loop_simple_run_1() {
     let mut fc = ForthCompiler::new();
@@ -114,6 +115,19 @@ fn test_do_plus_loop() {
             Opcode::DROPLP,
             Opcode::RET
         ]
+    );
+}
+
+#[test]
+fn test_do_plus_loop_simple_run_1() {
+    let mut fc = ForthCompiler::new();
+
+    fc.execute_string("10 0 DO I 2 +LOOP", GasLimit::Limited(250))
+        .unwrap();
+
+    assert_eq!(
+        &fc.sm.st.number_stack,
+        &vec![0_i64, 2, 4, 6, 8]
     );
 }
 
