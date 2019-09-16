@@ -85,7 +85,7 @@ fn test_do_loop_simple_run_1() {
 
     assert_eq!(
         &fc.sm.st.number_stack,
-        &vec![0_i64, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        &vec![0_i64, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     );
 }
 
