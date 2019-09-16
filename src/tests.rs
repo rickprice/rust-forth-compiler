@@ -125,34 +125,31 @@ fn test_do_plus_loop_simple_run_1() {
     fc.execute_string("10 0 DO I 2 +LOOP", GasLimit::Limited(250))
         .unwrap();
 
-    assert_eq!(
-        &fc.sm.st.number_stack,
-        &vec![0_i64, 2, 4, 6, 8]
-    );
+    assert_eq!(&fc.sm.st.number_stack, &vec![0_i64, 2, 4, 6, 8]);
 }
 
 #[test]
 fn test_do_loop_compound_run_1() {
     let mut fc = ForthCompiler::new();
 
-    fc.execute_string("100 10 DO 10 0 DO J I ADD LOOP 10 +LOOP", GasLimit::Limited(1000))
-        .unwrap();
+    fc.execute_string(
+        "100 10 DO 10 0 DO J I ADD LOOP 10 +LOOP",
+        GasLimit::Limited(1000),
+    )
+    .unwrap();
 
     assert_eq!(
         &fc.sm.st.number_stack,
         &vec![
-            10_i64, 11, 12, 13, 14, 15,16,17,18,19,
-            20_i64, 21, 22, 23, 24, 25,26,27,28,29,
-            30_i64, 31, 32, 33, 34, 35,36,37,38,39,
-            40_i64, 41, 42, 43, 44, 45,46,47,48,49,
-            50_i64, 51, 52, 53, 54, 55,56,57,58,59,
-            60_i64, 61, 62, 63, 64, 65,66,67,68,69,
-            70_i64, 71, 72, 73, 74, 75,76,77,78,79,
-            80_i64, 81, 82, 83, 84, 85,86,87,88,89,
-            90_i64, 91, 92, 93, 94, 95,96,97,98,99,
+            10_i64, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20_i64, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+            30_i64, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40_i64, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+            50_i64, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60_i64, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+            70_i64, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80_i64, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+            90_i64, 91, 92, 93, 94, 95, 96, 97, 98, 99,
         ]
     );
 }
+
 #[test]
 fn test_begin_while_repeat() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 WHILE 456 REPEAT");
@@ -167,12 +164,31 @@ fn test_begin_while_repeat() {
             Opcode::LDI(4),
             Opcode::JRZ,
             Opcode::LDI(456),
-            Opcode::LDI(-6),
+            Opcode::LDI(-5),
             Opcode::JR,
             Opcode::RET
         ]
     );
 }
+
+#[test]
+fn test_begin_while_repeat_run() {
+    let mut fc = ForthCompiler::new();
+
+    fc.execute_string(
+        "10 BEGIN DEC DUP WHILE REPEAT",
+        GasLimit::Limited(100),
+    )
+    .unwrap();
+
+    assert_eq!(
+        &fc.sm.st.number_stack,
+        &vec![
+            0_i64
+        ]
+    );
+}
+
 #[test]
 fn test_begin_until() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 LEAVE 456 UNTIL");

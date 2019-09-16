@@ -246,12 +246,6 @@ impl ForthCompiler {
                     let current_instruction = tv.len();
 
                     match s.as_ref() {
-                        "BEGIN" => {
-                            deferred_statements.push(DeferredStatement::BeginLoop(
-                                DeferredBeginLoopStatement::new(current_instruction),
-                                LoopExits::new(),
-                            ));
-                        }
                         "DO" => {
                             let start_of_loop_code = current_instruction;
                             // This eats the loop parameters from the number stack...
@@ -331,6 +325,12 @@ impl ForthCompiler {
                                 ));
                             }
                         }
+                        "BEGIN" => {
+                            deferred_statements.push(DeferredStatement::BeginLoop(
+                                DeferredBeginLoopStatement::new(current_instruction),
+                                LoopExits::new(),
+                            ));
+                        }
                         "UNTIL" => {
                             if let Some(DeferredStatement::BeginLoop(loop_def, loop_exits)) =
                                 deferred_statements.pop()
@@ -370,7 +370,7 @@ impl ForthCompiler {
                                 let jump_back = i64::try_from(loop_def.logical_start).unwrap()
                                     - i64::try_from(current_instruction).unwrap()
                                     // Have to jump back over the JR and the LDI
-                                    - 2;
+                                    - 1;
                                 tv.push(Opcode::LDI(jump_back));
                                 tv.push(Opcode::JR);
 
