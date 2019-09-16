@@ -272,7 +272,7 @@ impl ForthCompiler {
                                 let jump_back = i64::try_from(loop_def.logical_start).unwrap()
                                     - i64::try_from(current_instruction).unwrap()
                                     // Have to jump back over the JR and the LDI
-                                    - 2;
+                                    - 3;
                                 tv.push(Opcode::INCLP);
                                 tv.push(Opcode::CMPLOOP);
                                 tv.push(Opcode::LDI(jump_back));
@@ -293,7 +293,7 @@ impl ForthCompiler {
                                 let jump_back = i64::try_from(loop_def.logical_start).unwrap()
                                     - i64::try_from(current_instruction).unwrap()
                                     // Have to jump back over the JR and the LDI
-                                    - 2;
+                                    - 3;
                                 tv.push(Opcode::ADDLP);
                                 tv.push(Opcode::CMPLOOP);
                                 tv.push(Opcode::LDI(jump_back));

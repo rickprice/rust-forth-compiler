@@ -28,7 +28,7 @@ fn test_j() {
 
 #[test]
 fn test_do_loop() {
-    let tokenizer = ForthTokenizer::new("0 10 DO 123 LEAVE 456 LOOP");
+    let tokenizer = ForthTokenizer::new("10 0 DO 123 LEAVE 456 LOOP");
     let mut fc = ForthCompiler::new();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
@@ -36,8 +36,8 @@ fn test_do_loop() {
     assert_eq!(
         &ol,
         &vec![
-            Opcode::LDI(0),
             Opcode::LDI(10),
+            Opcode::LDI(0),
             Opcode::PUSHLP,
             Opcode::LDI(123),
             Opcode::LDI(6),
@@ -45,7 +45,7 @@ fn test_do_loop() {
             Opcode::LDI(456),
             Opcode::INCLP,
             Opcode::CMPLOOP,
-            Opcode::LDI(-6),
+            Opcode::LDI(-7),
             Opcode::JRZ,
             Opcode::DROPLP,
             Opcode::RET
@@ -54,10 +54,33 @@ fn test_do_loop() {
 }
 
 #[test]
-fn test_do_loop_run_1() {
+fn test_do_loop_simple() {
+    let tokenizer = ForthTokenizer::new("10 0 DO I LOOP");
+    let mut fc = ForthCompiler::new();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(10),
+            Opcode::LDI(0),
+            Opcode::PUSHLP,
+            Opcode::GETLP,
+            Opcode::INCLP,
+            Opcode::CMPLOOP,
+            Opcode::LDI(-4),
+            Opcode::JRZ,
+            Opcode::DROPLP,
+            Opcode::RET
+        ]
+    );
+}
+#[test]
+fn test_do_loop_simple_run_1() {
     let mut fc = ForthCompiler::new();
 
-    fc.execute_string("0 10 DO I LOOP", GasLimit::Limited(100))
+    fc.execute_string("10 0 DO I LOOP", GasLimit::Limited(250))
         .unwrap();
 
     assert_eq!(
@@ -68,7 +91,7 @@ fn test_do_loop_run_1() {
 
 #[test]
 fn test_do_plus_loop() {
-    let tokenizer = ForthTokenizer::new("0 10 DO 123 LEAVE 456 2 +LOOP");
+    let tokenizer = ForthTokenizer::new("10 0 DO 123 LEAVE 456 2 +LOOP");
     let mut fc = ForthCompiler::new();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
@@ -76,8 +99,8 @@ fn test_do_plus_loop() {
     assert_eq!(
         &ol,
         &vec![
-            Opcode::LDI(0),
             Opcode::LDI(10),
+            Opcode::LDI(0),
             Opcode::PUSHLP,
             Opcode::LDI(123),
             Opcode::LDI(7),
@@ -86,7 +109,7 @@ fn test_do_plus_loop() {
             Opcode::LDI(2),
             Opcode::ADDLP,
             Opcode::CMPLOOP,
-            Opcode::LDI(-7),
+            Opcode::LDI(-8),
             Opcode::JRZ,
             Opcode::DROPLP,
             Opcode::RET
