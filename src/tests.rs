@@ -190,6 +190,23 @@ fn test_begin_while_repeat_run() {
 }
 
 #[test]
+fn test_begin_while_leave_repeat_run() {
+    let mut fc = ForthCompiler::new();
+
+    fc.execute_string(
+        "10 BEGIN DEC DUP 5 SUB NOT IF LEAVE THEN DUP WHILE REPEAT",
+        GasLimit::Limited(100),
+    )
+    .unwrap();
+
+    assert_eq!(
+        &fc.sm.st.number_stack,
+        &vec![
+            5_i64
+        ]
+    );
+}
+#[test]
 fn test_begin_until() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 LEAVE 456 UNTIL");
     let mut fc = ForthCompiler::new();

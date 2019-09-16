@@ -44,6 +44,7 @@ impl ForthCompiler {
             intrinsic_words: hashmap![
             "POP" => vec![Opcode::POP],
             "SWAP" => vec![Opcode::SWAP],
+            "NOT" => vec![Opcode::NOT],
             "ADD" => vec![Opcode::ADD],
             "SUB" => vec![Opcode::SUB],
             "MUL" => vec![Opcode::MUL],
