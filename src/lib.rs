@@ -40,7 +40,7 @@ pub struct ForthCompiler {
 impl ForthCompiler {
     pub fn new() -> ForthCompiler {
         ForthCompiler {
-            sm: StackMachine::new(),
+            sm: StackMachine::default(),
             intrinsic_words: hashmap![
             "POP" => vec![Opcode::POP],
             "SWAP" => vec![Opcode::SWAP],
