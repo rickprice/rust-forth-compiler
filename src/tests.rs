@@ -9,7 +9,7 @@ use rust_simple_stack_processor::TrapHandler;
 #[test]
 fn test_i() {
     let tokenizer = ForthTokenizer::new("I");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -19,7 +19,7 @@ fn test_i() {
 #[test]
 fn test_j() {
     let tokenizer = ForthTokenizer::new("J");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -29,7 +29,7 @@ fn test_j() {
 #[test]
 fn test_do_loop() {
     let tokenizer = ForthTokenizer::new("10 0 DO 123 LEAVE 456 LOOP");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -56,7 +56,7 @@ fn test_do_loop() {
 #[test]
 fn test_do_loop_simple() {
     let tokenizer = ForthTokenizer::new("10 0 DO I LOOP");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -79,7 +79,7 @@ fn test_do_loop_simple() {
 
 #[test]
 fn test_do_loop_simple_run_1() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string("10 0 DO I LOOP", GasLimit::Limited(250))
         .unwrap();
@@ -93,7 +93,7 @@ fn test_do_loop_simple_run_1() {
 #[test]
 fn test_do_plus_loop() {
     let tokenizer = ForthTokenizer::new("10 0 DO 123 LEAVE 456 2 +LOOP");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -120,7 +120,7 @@ fn test_do_plus_loop() {
 
 #[test]
 fn test_do_plus_loop_simple_run_1() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string("10 0 DO I 2 +LOOP", GasLimit::Limited(250))
         .unwrap();
@@ -130,7 +130,7 @@ fn test_do_plus_loop_simple_run_1() {
 
 #[test]
 fn test_do_loop_compound_run_1() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string(
         "100 10 DO 10 0 DO J I ADD LOOP 10 +LOOP",
@@ -153,7 +153,7 @@ fn test_do_loop_compound_run_1() {
 #[test]
 fn test_begin_while_repeat() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 WHILE 456 REPEAT");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -173,7 +173,7 @@ fn test_begin_while_repeat() {
 
 #[test]
 fn test_begin_while_repeat_run() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string("10 BEGIN DEC DUP WHILE REPEAT", GasLimit::Limited(100))
         .unwrap();
@@ -183,7 +183,7 @@ fn test_begin_while_repeat_run() {
 
 #[test]
 fn test_begin_while_leave_repeat_run() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string(
         "10 BEGIN DEC DUP 5 SUB NOT IF LEAVE THEN DUP WHILE REPEAT",
@@ -196,7 +196,7 @@ fn test_begin_while_leave_repeat_run() {
 #[test]
 fn test_begin_until() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 LEAVE 456 UNTIL");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -217,7 +217,7 @@ fn test_begin_until() {
 #[test]
 fn test_begin_again() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 AGAIN");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -230,7 +230,7 @@ fn test_begin_again() {
 #[test]
 fn test_begin_again_leave() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 LEAVE 456 LEAVE 789 AGAIN");
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
@@ -253,7 +253,7 @@ fn test_begin_again_leave() {
 
 #[test]
 fn test_execute_intrinsics_1() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string("123 321 ADD 2 MUL", GasLimit::Limited(100))
         .unwrap();
@@ -267,7 +267,7 @@ fn test_execute_intrinsics_1() {
 }
 #[test]
 fn test_compile_1() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string(
         ": RickTest 123 321 ADD 2 MUL ; RickTest",
@@ -285,7 +285,7 @@ fn test_compile_1() {
 
 #[test]
 fn test_compile_2() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string(
         ": RickTest 123 321 ADD 2 MUL ; RickTest : RickTestB 123 321 ADD 2 MUL ;",
@@ -303,7 +303,7 @@ fn test_compile_2() {
 
 #[test]
 fn test_compile_3() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string(
             "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; RickTest : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB POP",
@@ -321,7 +321,7 @@ fn test_compile_3() {
 
 #[test]
 fn test_compile_4() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string(
         "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
@@ -339,7 +339,7 @@ fn test_compile_4() {
 
 #[test]
 fn test_compile_fail_1() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     match fc.execute_string(
         "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
@@ -352,7 +352,7 @@ fn test_compile_fail_1() {
 
 #[test]
 fn test_compile_fail_2() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     match fc.execute_string(
         "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
@@ -365,7 +365,7 @@ fn test_compile_fail_2() {
 
 #[test]
 fn test_compile_fail_3() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     match fc.execute_string(
             "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : RickTestB 123 321 ADD 2 MUL ; : ERROR 3 3 SUB",
@@ -378,7 +378,7 @@ fn test_compile_fail_3() {
 
 #[test]
 fn test_if_else_1() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string(
         "1 2 3 POP POP POP -7 IF 1 2 ADD ELSE 3 4 ADD THEN",
@@ -391,7 +391,7 @@ fn test_if_else_1() {
 
 #[test]
 fn test_if_else_2() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string(
         "1 2 3 POP POP POP 0 IF 1 2 ADD ELSE 3 4 ADD THEN",
@@ -404,7 +404,7 @@ fn test_if_else_2() {
 
 #[test]
 fn test_if_else_3() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string("1 IF 1 2 ADD ELSE 3 4 ADD THEN", GasLimit::Limited(100))
         .unwrap();
@@ -414,7 +414,7 @@ fn test_if_else_3() {
 
 #[test]
 fn test_if_else_4() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string("0 IF 1 2 ADD ELSE 3 4 ADD THEN", GasLimit::Limited(100))
         .unwrap();
@@ -424,7 +424,7 @@ fn test_if_else_4() {
 
 #[test]
 fn test_trap_1() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     // Simulate a IO OUT command, at TRAP(100)
     fc.sm
@@ -457,7 +457,7 @@ fn test_trap_1() {
 
 #[test]
 fn test_trap_2() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     // Simulate a IO IN command, at TRAP(101)
     fc.sm
@@ -485,7 +485,7 @@ fn test_trap_2() {
 
 #[test]
 fn test_trap_3() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     // Simulate a IO OUT command, at TRAP(100), but define the port number inside a Forth Word as well
     fc.sm
@@ -518,7 +518,7 @@ fn test_trap_3() {
 
 #[test]
 fn test_trap_4() {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     // Simulate a IO IN command, at TRAP(101), but define the port number inside a Forth word as well
     fc.sm

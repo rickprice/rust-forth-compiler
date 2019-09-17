@@ -37,8 +37,8 @@ pub struct ForthCompiler {
     last_function: usize,
 }
 
-impl ForthCompiler {
-    pub fn new() -> ForthCompiler {
+impl Default for ForthCompiler {
+    fn default() -> ForthCompiler {
         ForthCompiler {
             sm: StackMachine::default(),
             intrinsic_words: hashmap![
@@ -88,8 +88,8 @@ struct DeferredDoLoopStatement {
 impl DeferredDoLoopStatement {
     pub fn new(prelude_start: usize, logical_start: usize) -> DeferredDoLoopStatement {
         DeferredDoLoopStatement {
-            prelude_start: prelude_start,
-            logical_start: logical_start,
+            prelude_start,
+            logical_start,
         }
     }
 }
@@ -127,9 +127,7 @@ struct DeferredBeginLoopStatement {
 
 impl DeferredBeginLoopStatement {
     pub fn new(logical_start: usize) -> DeferredBeginLoopStatement {
-        DeferredBeginLoopStatement {
-            logical_start: logical_start,
-        }
+        DeferredBeginLoopStatement { logical_start }
     }
 }
 
@@ -474,12 +472,10 @@ impl ForthCompiler {
                             if let Some(offset) = self.word_addresses.get(*s) {
                                 tv.push(Opcode::LDI(*offset as i64));
                                 tv.push(Opcode::CALL);
+                            } else if let Some(ol) = self.intrinsic_words.get::<str>(s) {
+                                tv.append(&mut ol.clone());
                             } else {
-                                if let Some(ol) = self.intrinsic_words.get::<str>(s) {
-                                    tv.append(&mut ol.clone());
-                                } else {
-                                    return Err(ForthError::UnknownToken(s.to_string()));
-                                }
+                                return Err(ForthError::UnknownToken(s.to_string()));
                             }
                         }
                     }
@@ -493,9 +489,7 @@ impl ForthCompiler {
             }
         }
 
-        //println!("Compiled Codes {:?}", tv);
-        //println!("Total size of Codes {:?}", tv.len());
-        return Ok(tv);
+        Ok(tv)
     }
 
     fn execute_tokens(

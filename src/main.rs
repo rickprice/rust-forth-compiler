@@ -14,7 +14,7 @@ fn main() -> Result<(), ForthError> {
 }
 
 fn run() -> Result<(), ForthError> {
-    let mut fc = ForthCompiler::new();
+    let mut fc = ForthCompiler::default();
 
     fc.execute_string("10 0 DO I LOOP", GasLimit::Limited(250))?;
 
