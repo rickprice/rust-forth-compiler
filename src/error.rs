@@ -15,6 +15,7 @@ pub enum ForthError {
     SemicolonBeforeColon,
     UnhandledTrap,
     RanOutOfGas,
+    InternalNumericOverflow,
 }
 
 /// Convert StackMachineError to a ForthError so our Interpreter functions can
@@ -27,6 +28,7 @@ impl From<StackMachineError> for ForthError {
             StackMachineError::UnkownError => ForthError::UnknownError,
             StackMachineError::UnhandledTrap => ForthError::UnhandledTrap,
             StackMachineError::RanOutOfGas => ForthError::RanOutOfGas,
+            StackMachineError::NumericOverflow => ForthError::InternalNumericOverflow,
         }
     }
 }
@@ -45,6 +47,7 @@ impl From<ForthError> for i32 {
             ForthError::SemicolonBeforeColon => 9,
             ForthError::UnhandledTrap => 10,
             ForthError::RanOutOfGas => 11,
+            ForthError::InternalNumericOverflow => 12,
         }
     }
 }

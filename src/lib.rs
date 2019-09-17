@@ -72,7 +72,7 @@ struct DeferredIfStatement {
 impl DeferredIfStatement {
     pub fn new(if_location: usize) -> DeferredIfStatement {
         DeferredIfStatement {
-            if_location: if_location,
+            if_location,
             else_location: None,
         }
     }
