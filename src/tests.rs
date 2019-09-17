@@ -175,18 +175,10 @@ fn test_begin_while_repeat() {
 fn test_begin_while_repeat_run() {
     let mut fc = ForthCompiler::new();
 
-    fc.execute_string(
-        "10 BEGIN DEC DUP WHILE REPEAT",
-        GasLimit::Limited(100),
-    )
-    .unwrap();
+    fc.execute_string("10 BEGIN DEC DUP WHILE REPEAT", GasLimit::Limited(100))
+        .unwrap();
 
-    assert_eq!(
-        &fc.sm.st.number_stack,
-        &vec![
-            0_i64
-        ]
-    );
+    assert_eq!(&fc.sm.st.number_stack, &vec![0_i64]);
 }
 
 #[test]
@@ -194,17 +186,12 @@ fn test_begin_while_leave_repeat_run() {
     let mut fc = ForthCompiler::new();
 
     fc.execute_string(
-        "10 BEGIN DEC DUP 5 SUB NOT IF LEAVE THEN DUP WHILE REPEAT",
+        "10 BEGIN DEC DUP 5 SUB IF LEAVE THEN DUP WHILE REPEAT",
         GasLimit::Limited(100),
     )
     .unwrap();
 
-    assert_eq!(
-        &fc.sm.st.number_stack,
-        &vec![
-            5_i64
-        ]
-    );
+    assert_eq!(&fc.sm.st.number_stack, &vec![5_i64]);
 }
 #[test]
 fn test_begin_until() {

@@ -303,7 +303,13 @@ impl ForthCompiler {
                             tv.push(Opcode::DROPLP);
                         }
                         "LEAVE" => {
-                            if let Some(deferred_statement) = deferred_statements.last_mut() {
+                            let most_recent_loop_statement =
+                                deferred_statements.iter_mut().rev().find(|x| match **x {
+                                    DeferredStatement::If(_) => false,
+                                    DeferredStatement::DoLoop(_, _) => true,
+                                    DeferredStatement::BeginLoop(_, _) => true,
+                                });
+                            if let Some(deferred_statement) = most_recent_loop_statement {
                                 let loop_exits =
                                     match deferred_statement {
                                         DeferredStatement::DoLoop(_, loop_exits) => loop_exits,
