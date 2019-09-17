@@ -406,13 +406,14 @@ impl ForthCompiler {
                                 ));
                             }
                         }
+                        // FLAG 0 = Skip stuff inside IF, !0 = Run stuff inside IF
                         "IF" => {
                             deferred_statements.push(DeferredStatement::If(
                                 DeferredIfStatement::new(current_instruction),
                             ));
                             //println!("(IF)Deferred If Stack {:?}", deferred_if_statements);
                             tv.push(Opcode::LDI(0));
-                            tv.push(Opcode::JRNZ);
+                            tv.push(Opcode::JRZ);
                         }
                         "ELSE" => {
                             if let Some(DeferredStatement::If(x)) = deferred_statements.last_mut() {
