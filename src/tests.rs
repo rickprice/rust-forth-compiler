@@ -236,15 +236,42 @@ fn test_begin_until_run() {
 
 #[test]
 fn test_begin_again() {
-    let tokenizer = ForthTokenizer::new("BEGIN 123 AGAIN");
+    let tokenizer = ForthTokenizer::new("10 BEGIN DEC DUP NOT IF LEAVE THEN AGAIN");
     let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
+        // Currently this assert is all wrong, it has to be updated for the changes to the test
     assert_eq!(
         &ol,
-        &vec![Opcode::LDI(123), Opcode::LDI(-3), Opcode::JR, Opcode::RET]
+        &vec![
+            Opcode::LDI(10),
+            Opcode::LDI(-1),
+            Opcode::ADD,
+            Opcode::DUP,
+            Opcode::NOT,
+            Opcode::LDI(3),
+            Opcode::JRZ,
+            Opcode::LDI(3),
+            Opcode::JR,
+            Opcode::LDI(-9),
+            Opcode::JR,
+            Opcode::RET
+        ]
     );
+}
+
+#[test]
+fn test_begin_again_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string(
+        "10 BEGIN DEC DUP NOT IF LEAVE THEN AGAIN",
+        GasLimit::Limited(250),
+    )
+    .unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![0_i64]);
 }
 
 #[test]
@@ -264,7 +291,7 @@ fn test_begin_again_leave() {
             Opcode::LDI(4),
             Opcode::JR,
             Opcode::LDI(789),
-            Opcode::LDI(-9),
+            Opcode::LDI(-8),
             Opcode::JR,
             Opcode::RET
         ]
