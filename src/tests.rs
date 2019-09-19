@@ -193,6 +193,7 @@ fn test_begin_while_leave_repeat_run() {
 
     assert_eq!(&fc.sm.st.number_stack, &vec![5_i64]);
 }
+
 #[test]
 fn test_begin_until() {
     let tokenizer = ForthTokenizer::new("BEGIN 123 LEAVE 456 UNTIL");
@@ -212,6 +213,19 @@ fn test_begin_until() {
             Opcode::RET
         ]
     );
+}
+
+#[test]
+fn test_begin_until_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string(
+        "BEGIN 123 LEAVE 456 UNTIL",
+        GasLimit::Limited(100),
+    )
+    .unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![123_i64]);
 }
 
 #[test]
