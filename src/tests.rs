@@ -196,7 +196,7 @@ fn test_begin_while_leave_repeat_run() {
 
 #[test]
 fn test_begin_until() {
-    let tokenizer = ForthTokenizer::new("BEGIN 123 LEAVE 456 UNTIL");
+    let tokenizer = ForthTokenizer::new("10 BEGIN 0 IF LEAVE THEN DEC DUP NOT UNTIL");
     let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
@@ -204,11 +204,17 @@ fn test_begin_until() {
     assert_eq!(
         &ol,
         &vec![
-            Opcode::LDI(123),
-            Opcode::LDI(4),
+            Opcode::LDI(10),
+            Opcode::LDI(0),
+            Opcode::LDI(3),
+            Opcode::JRZ,
+            Opcode::LDI(7),
             Opcode::JR,
-            Opcode::LDI(456),
-            Opcode::LDI(-6),
+            Opcode::LDI(-1),
+            Opcode::ADD,
+            Opcode::DUP,
+            Opcode::NOT,
+            Opcode::LDI(-10),
             Opcode::JRZ,
             Opcode::RET
         ]
@@ -220,12 +226,12 @@ fn test_begin_until_run() {
     let mut fc = ForthCompiler::default();
 
     fc.execute_string(
-        "BEGIN 123 LEAVE 456 UNTIL",
-        GasLimit::Limited(100),
+        "10 BEGIN 0 IF LEAVE THEN DEC DUP NOT UNTIL",
+        GasLimit::Limited(250),
     )
     .unwrap();
 
-    assert_eq!(&fc.sm.st.number_stack, &vec![123_i64]);
+    assert_eq!(&fc.sm.st.number_stack, &vec![0_i64]);
 }
 
 #[test]
