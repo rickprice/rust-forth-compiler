@@ -10,3 +10,5 @@ Cargo.lock
 **/*.rs.bk
 .Cargo.toml.un~
 .README.md.un~
+deleteme_pforth_c_source/pf_inner.c
+deleteme_pforth_c_source/pfcompil.c

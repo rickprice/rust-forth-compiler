@@ -12,7 +12,8 @@ categories = ["embedded"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-simple-stack-processor = "0.6.0"
+#rust-simple-stack-processor = "0.6.0"
+rust-simple-stack-processor = { path="../rust-simple-stack-processor"}
 rust-forth-tokenizer= "0.1.1"
 
 [features]

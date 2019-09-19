@@ -7,6 +7,84 @@ use rust_simple_stack_processor::TrapHandled;
 use rust_simple_stack_processor::TrapHandler;
 
 #[test]
+fn test_intrinsics_one_plus() {
+    let tokenizer = ForthTokenizer::new("1+");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(1), Opcode::ADD, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_one_minus() {
+    let tokenizer = ForthTokenizer::new("1-");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(-1), Opcode::ADD, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_two_plus() {
+    let tokenizer = ForthTokenizer::new("2+");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(2), Opcode::ADD, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_two_minus() {
+    let tokenizer = ForthTokenizer::new("2-");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(-2), Opcode::ADD, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_two_minus_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("10 2-", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![8_i64]);
+}
+
+#[test]
+fn test_intrinsics_two_mul() {
+    let tokenizer = ForthTokenizer::new("2*");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(2), Opcode::MUL, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_two_div() {
+    let tokenizer = ForthTokenizer::new("2/");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(2), Opcode::DIV, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_two_div_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("10 2/", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![5_i64]);
+}
+
+#[test]
 fn test_i() {
     let tokenizer = ForthTokenizer::new("I");
     let mut fc = ForthCompiler::default();
@@ -175,7 +253,7 @@ fn test_begin_while_repeat() {
 fn test_begin_while_repeat_run() {
     let mut fc = ForthCompiler::default();
 
-    fc.execute_string("10 BEGIN DEC DUP WHILE REPEAT", GasLimit::Limited(100))
+    fc.execute_string("10 BEGIN 1- DUP WHILE REPEAT", GasLimit::Limited(100))
         .unwrap();
 
     assert_eq!(&fc.sm.st.number_stack, &vec![0_i64]);
@@ -186,7 +264,7 @@ fn test_begin_while_leave_repeat_run() {
     let mut fc = ForthCompiler::default();
 
     fc.execute_string(
-        "10 BEGIN DEC DUP 5 SUB NOT IF LEAVE THEN DUP WHILE REPEAT",
+        "10 BEGIN 1- DUP 5 SUB NOT IF LEAVE THEN DUP WHILE REPEAT",
         GasLimit::Limited(100),
     )
     .unwrap();
@@ -196,7 +274,7 @@ fn test_begin_while_leave_repeat_run() {
 
 #[test]
 fn test_begin_until() {
-    let tokenizer = ForthTokenizer::new("10 BEGIN 0 IF LEAVE THEN DEC DUP NOT UNTIL");
+    let tokenizer = ForthTokenizer::new("10 BEGIN 0 IF LEAVE THEN 1- DUP NOT UNTIL");
     let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
@@ -226,7 +304,7 @@ fn test_begin_until_run() {
     let mut fc = ForthCompiler::default();
 
     fc.execute_string(
-        "10 BEGIN 0 IF LEAVE THEN DEC DUP NOT UNTIL",
+        "10 BEGIN 0 IF LEAVE THEN 1- DUP NOT UNTIL",
         GasLimit::Limited(250),
     )
     .unwrap();
@@ -236,12 +314,12 @@ fn test_begin_until_run() {
 
 #[test]
 fn test_begin_again() {
-    let tokenizer = ForthTokenizer::new("10 BEGIN DEC DUP NOT IF LEAVE THEN AGAIN");
+    let tokenizer = ForthTokenizer::new("10 BEGIN 1- DUP NOT IF LEAVE THEN AGAIN");
     let mut fc = ForthCompiler::default();
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
-        // Currently this assert is all wrong, it has to be updated for the changes to the test
+    // Currently this assert is all wrong, it has to be updated for the changes to the test
     assert_eq!(
         &ol,
         &vec![
@@ -266,7 +344,7 @@ fn test_begin_again_run() {
     let mut fc = ForthCompiler::default();
 
     fc.execute_string(
-        "10 BEGIN DEC DUP NOT IF LEAVE THEN AGAIN",
+        "10 BEGIN 1- DUP NOT IF LEAVE THEN AGAIN",
         GasLimit::Limited(250),
     )
     .unwrap();
