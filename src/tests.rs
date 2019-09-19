@@ -85,6 +85,82 @@ fn test_intrinsics_two_div_run() {
 }
 
 #[test]
+fn test_intrinsics_dup() {
+    let tokenizer = ForthTokenizer::new("10 2 DUP");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(10),Opcode::LDI(2), Opcode::DUP, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_dup_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("10 2 DUP", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![10_i64,2,2]);
+}
+
+#[test]
+fn test_intrinsics_two_dup() {
+    let tokenizer = ForthTokenizer::new("10 2 2DUP");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(10),Opcode::LDI(2), Opcode::DUP2, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_two_dup_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("10 2 2DUP", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![10_i64,2,10,2]);
+}
+
+#[test]
+fn test_intrinsics_drop() {
+    let tokenizer = ForthTokenizer::new("10 2 DROP");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(10),Opcode::LDI(2), Opcode::DROP, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_drop_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("10 2 DROP", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![10_i64]);
+}
+
+#[test]
+fn test_intrinsics_two_drop() {
+    let tokenizer = ForthTokenizer::new("10 2 2DROP");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(10),Opcode::LDI(2), Opcode::DROP,Opcode::DROP, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_two_drop_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("3 10 2 2DROP", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![3_i64]);
+}
+
+#[test]
 fn test_i() {
     let tokenizer = ForthTokenizer::new("I");
     let mut fc = ForthCompiler::default();
@@ -431,7 +507,7 @@ fn test_compile_3() {
     let mut fc = ForthCompiler::default();
 
     fc.execute_string(
-            "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; RickTest : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB POP",
+            "2 2 SUB DROP : RickTest 123 321 ADD 2 MUL ; RickTest : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB DROP",
             GasLimit::Limited(100),
         )
         .unwrap();
@@ -449,7 +525,7 @@ fn test_compile_4() {
     let mut fc = ForthCompiler::default();
 
     fc.execute_string(
-        "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
+        "2 2 SUB DROP : RickTest 123 321 ADD 2 MUL ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
         GasLimit::Limited(100),
     )
     .unwrap();
@@ -467,7 +543,7 @@ fn test_compile_fail_1() {
     let mut fc = ForthCompiler::default();
 
     match fc.execute_string(
-        "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
+        "2 2 SUB DROP : RickTest 123 321 ADD 2 MUL ; : : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
         GasLimit::Limited(100),
     ) {
         Err(ForthError::MissingCommandAfterColon) => (),
@@ -480,7 +556,7 @@ fn test_compile_fail_2() {
     let mut fc = ForthCompiler::default();
 
     match fc.execute_string(
-        "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
+        "2 2 SUB DROP : RickTest 123 321 ADD 2 MUL ; ; : RickTestB 123 321 ADD 2 MUL ; 3 3 SUB",
         GasLimit::Limited(100),
     ) {
         Err(ForthError::SemicolonBeforeColon) => (),
@@ -493,7 +569,7 @@ fn test_compile_fail_3() {
     let mut fc = ForthCompiler::default();
 
     match fc.execute_string(
-            "2 2 SUB POP : RickTest 123 321 ADD 2 MUL ; : RickTestB 123 321 ADD 2 MUL ; : ERROR 3 3 SUB",
+            "2 2 SUB DROP : RickTest 123 321 ADD 2 MUL ; : RickTestB 123 321 ADD 2 MUL ; : ERROR 3 3 SUB",
             GasLimit::Limited(100),
         ) {
             Err(ForthError::MissingSemicolonAfterColon) => (),
@@ -506,7 +582,7 @@ fn test_if_else_1() {
     let mut fc = ForthCompiler::default();
 
     fc.execute_string(
-        "1 2 3 POP POP POP -7 IF 1 2 ADD ELSE 3 4 ADD THEN",
+        "1 2 3 DROP DROP DROP -7 IF 1 2 ADD ELSE 3 4 ADD THEN",
         GasLimit::Limited(100),
     )
     .unwrap();
@@ -519,7 +595,7 @@ fn test_if_else_2() {
     let mut fc = ForthCompiler::default();
 
     fc.execute_string(
-        "1 2 3 POP POP POP 0 IF 1 2 ADD ELSE 3 4 ADD THEN",
+        "1 2 3 DROP DROP DROP 0 IF 1 2 ADD ELSE 3 4 ADD THEN",
         GasLimit::Limited(100),
     )
     .unwrap();

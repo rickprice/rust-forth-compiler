@@ -26,7 +26,7 @@ macro_rules! hashmap {
 pub struct ForthCompiler {
     // This is the Stack Machine processor that runs the compiled Forth instructions
     pub sm: StackMachine,
-    // These are the words that we know how to work with regardless, things like POP, MUL, etc
+    // These are the words that we know how to work with regardless, things like DROP, MUL, etc
     intrinsic_words: HashMap<&'static str, Vec<Opcode>>,
     // This is where we remember where we put compiled words in the *memory* of the StackMachine
     // We run the interactive opcodes after these compiled words, and then erase the memory after
@@ -42,7 +42,6 @@ impl Default for ForthCompiler {
         ForthCompiler {
             sm: StackMachine::default(),
             intrinsic_words: hashmap![
-            "POP" => vec![Opcode::POP],
             "SWAP" => vec![Opcode::SWAP],
             "NOT" => vec![Opcode::NOT],
             "ADD" => vec![Opcode::ADD],
@@ -50,7 +49,10 @@ impl Default for ForthCompiler {
             "MUL" => vec![Opcode::MUL],
             "DIV" => vec![Opcode::DIV],
             "DUP" => vec![Opcode::DUP],
+            "2DUP" => vec![Opcode::DUP2],
             "TRAP" => vec![Opcode::TRAP],
+            "DROP" => vec![Opcode::DROP],
+            "2DROP" => vec![Opcode::DROP,Opcode::DROP],
             "1+" => vec![Opcode::LDI(1),Opcode::ADD],
             "1-" => vec![Opcode::LDI(-1),Opcode::ADD],
             "2+" => vec![Opcode::LDI(2),Opcode::ADD],
