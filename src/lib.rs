@@ -53,6 +53,7 @@ impl Default for ForthCompiler {
             "TRAP" => vec![Opcode::TRAP],
             "DROP" => vec![Opcode::DROP],
             "2DROP" => vec![Opcode::DROP,Opcode::DROP],
+            "2OVER" => vec![Opcode::OVER2],
             "1+" => vec![Opcode::LDI(1),Opcode::ADD],
             "1-" => vec![Opcode::LDI(-1),Opcode::ADD],
             "2+" => vec![Opcode::LDI(2),Opcode::ADD],

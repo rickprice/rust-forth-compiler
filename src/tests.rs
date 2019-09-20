@@ -161,6 +161,24 @@ fn test_intrinsics_two_drop_run() {
 }
 
 #[test]
+fn test_intrinsics_two_over() {
+    let tokenizer = ForthTokenizer::new("1 2 3 4 2OVER");
+    let mut fc = ForthCompiler::default();
+    let ol = fc
+        .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
+        .unwrap();
+    assert_eq!(&ol, &vec![Opcode::LDI(1),Opcode::LDI(2),Opcode::LDI(3),Opcode::LDI(4), Opcode::OVER2, Opcode::RET]);
+}
+
+#[test]
+fn test_intrinsics_two_over_run() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("1 2 3 4 2OVER", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![1_i64,2,3,4,1,2]);
+}
+#[test]
 fn test_i() {
     let tokenizer = ForthTokenizer::new("I");
     let mut fc = ForthCompiler::default();
