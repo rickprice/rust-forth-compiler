@@ -9,6 +9,7 @@ pub enum ForthError {
     UnknownToken(String),
     NumberStackUnderflow,
     LoopStackUnderflow,
+    ScratchStackUnderflow,
     InvalidSyntax(String),
     MissingSemicolonAfterColon,
     MissingCommandAfterColon,
@@ -25,6 +26,7 @@ impl From<StackMachineError> for ForthError {
         match err {
             StackMachineError::NumberStackUnderflow => ForthError::NumberStackUnderflow,
             StackMachineError::LoopStackUnderflow => ForthError::LoopStackUnderflow,
+            StackMachineError::ScratchStackUnderflow => ForthError::ScratchStackUnderflow,
             StackMachineError::UnkownError => ForthError::UnknownError,
             StackMachineError::UnhandledTrap => ForthError::UnhandledTrap,
             StackMachineError::RanOutOfGas => ForthError::RanOutOfGas,
@@ -41,6 +43,7 @@ impl From<ForthError> for i32 {
             ForthError::UnknownToken(_) => 3,
             ForthError::NumberStackUnderflow => 4,
             ForthError::LoopStackUnderflow => 5,
+            ForthError::ScratchStackUnderflow => 13,
             ForthError::InvalidSyntax(_) => 6,
             ForthError::MissingSemicolonAfterColon => 7,
             ForthError::MissingCommandAfterColon => 8,
