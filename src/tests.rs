@@ -178,6 +178,7 @@ fn test_intrinsics_two_over_run() {
 
     assert_eq!(&fc.sm.st.number_stack, &vec![1_i64,2,3,4,1,2]);
 }
+
 #[test]
 fn test_intrinsics_two_swap() {
     let tokenizer = ForthTokenizer::new("1 2 3 4 2SWAP");
@@ -782,4 +783,22 @@ fn test_trap_4() {
 
     // Value from IO port on stack
     assert_eq!(&fc.sm.st.number_stack, &vec![654321]);
+}
+
+#[test]
+fn test_intrinsics_eq_run_1() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("1 1 =", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![-1_i64]);
+}
+
+#[test]
+fn test_intrinsics_eq_run_2() {
+    let mut fc = ForthCompiler::default();
+
+    fc.execute_string("1 2 =", GasLimit::Limited(100)).unwrap();
+
+    assert_eq!(&fc.sm.st.number_stack, &vec![0_i64]);
 }

@@ -62,7 +62,10 @@ impl Default for ForthCompiler {
             "2*" => vec![Opcode::LDI(2),Opcode::MUL],
             "2/" => vec![Opcode::LDI(2),Opcode::DIV],
             "I" => vec![Opcode::GETLP],
-            "J" => vec![Opcode::GETLP2]
+            "J" => vec![Opcode::GETLP2],
+            "AND" => vec![Opcode::AND],
+            "=" => vec![Opcode::SUB,Opcode::CMPZ],
+            "<>" => vec![Opcode::SUB,Opcode::CMPNZ]
             ],
             word_addresses: HashMap::new(),
             last_function: 0,
