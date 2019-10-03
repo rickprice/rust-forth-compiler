@@ -31,10 +31,16 @@ pub struct ForthCompiler {
     // This is where we remember where we put compiled words in the *memory* of the StackMachine
     // We run the interactive opcodes after these compiled words, and then erase the memory after
     // the compiled words again for the next batch of interactive opcodes.
+    #[cfg(feature="enable_reflection")]
+    pub word_addresses: HashMap<String, usize>,
+    #[cfg(not(feature="enable_reflection"))]
     word_addresses: HashMap<String, usize>,
     // This is the location in memory that points to the location after the last compiled opcode
     // So its an ideal place to run interactive compiled opcodes
     last_function: usize,
+    // Remember the definition for words
+    #[cfg(feature="enable_reflection")]
+    word_definitions: HashMap<String, Vec<Opcode>>,
 }
 
 impl Default for ForthCompiler {
@@ -69,6 +75,8 @@ impl Default for ForthCompiler {
             ],
             word_addresses: HashMap::new(),
             last_function: 0,
+            #[cfg(feature="enable_reflection")]
+            word_definitions: HashMap::new(),
         }
     }
 }
@@ -229,6 +237,8 @@ impl ForthCompiler {
         //        println!("Token Memory {:?}", self.sm.st.opcodes);
         //        println!("Word Addresses {:?}", self.word_addresses);
         //        println!("Last function {}", self.last_function);
+        #[cfg(feature="enable_reflection")]
+        self.word_definitions.insert(word_name.to_owned(),*tokens.clone());
         Ok(())
     }
 

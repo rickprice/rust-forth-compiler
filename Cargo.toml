@@ -17,4 +17,4 @@ rust-simple-stack-processor = "0.7.0"
 rust-forth-tokenizer= "0.1.2"
 
 [features]
-track-forth-compiler-metadata=[]
+enable_reflection=[]
