@@ -40,7 +40,10 @@ pub struct ForthCompiler {
     last_function: usize,
     // Remember the definition for words
     #[cfg(feature="enable_reflection")]
-    word_definitions: HashMap<String, Vec<Opcode>>,
+    pub word_definitions: HashMap<String, String>,
+    // Remember the opcodes for words
+    #[cfg(feature="enable_reflection")]
+    pub word_opcodes: HashMap<String, Vec<Opcode>>,
 }
 
 impl Default for ForthCompiler {
@@ -77,6 +80,8 @@ impl Default for ForthCompiler {
             last_function: 0,
             #[cfg(feature="enable_reflection")]
             word_definitions: HashMap::new(),
+            #[cfg(feature="enable_reflection")]
+            word_opcodes: HashMap::new(),
         }
     }
 }
@@ -238,7 +243,9 @@ impl ForthCompiler {
         //        println!("Word Addresses {:?}", self.word_addresses);
         //        println!("Last function {}", self.last_function);
         #[cfg(feature="enable_reflection")]
-        self.word_definitions.insert(word_name.to_owned(),*tokens.clone());
+        self.word_definitions.insert(word_name.to_owned(),format!("{:?}",tokens));
+        #[cfg(feature="enable_reflection")]
+        self.word_opcodes.insert(word_name.to_owned(),compiled.clone());
         Ok(())
     }
 

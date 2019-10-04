@@ -14,7 +14,8 @@ categories = ["embedded"]
 [dependencies]
 rust-simple-stack-processor = "0.7.0"
 #rust-simple-stack-processor = { path="../rust-simple-stack-processor"}
-rust-forth-tokenizer= "0.1.2"
+#rust-forth-tokenizer= "0.1.2"
+rust-forth-tokenizer = { path="../rust-forth-tokenizer"}
 
 [features]
 enable_reflection=[]
