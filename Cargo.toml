@@ -1,6 +1,6 @@
 [package]
 name = "rust-forth-compiler"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["Frederick Price <rprice@pricemail.ca>"]
 edition = "2018"
 license = "MIT"
@@ -14,8 +14,8 @@ categories = ["embedded"]
 [dependencies]
 rust-simple-stack-processor = "0.7.0"
 #rust-simple-stack-processor = { path="../rust-simple-stack-processor"}
-#rust-forth-tokenizer= "0.1.2"
-rust-forth-tokenizer = { path="../rust-forth-tokenizer"}
+rust-forth-tokenizer= "0.2.0"
+#rust-forth-tokenizer = { path="../rust-forth-tokenizer"}
 
 [features]
 enable_reflection=[]

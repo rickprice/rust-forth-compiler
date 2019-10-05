@@ -234,6 +234,9 @@ impl ForthCompiler {
         let function_start = self.last_function;
         // Move last function pointer
         self.last_function += compiled.len();
+        // Remember the opcodes for reflection purposes if its enabled
+        #[cfg(feature="enable_reflection")]
+        self.word_opcodes.insert(word_name.to_owned(),compiled.clone());
         // Add the function to the opcode memory
         self.sm.st.opcodes.append(&mut compiled);
         // Remember where to find it...
@@ -244,8 +247,6 @@ impl ForthCompiler {
         //        println!("Last function {}", self.last_function);
         #[cfg(feature="enable_reflection")]
         self.word_definitions.insert(word_name.to_owned(),format!("{:?}",tokens));
-        #[cfg(feature="enable_reflection")]
-        self.word_opcodes.insert(word_name.to_owned(),compiled.clone());
         Ok(())
     }
 
