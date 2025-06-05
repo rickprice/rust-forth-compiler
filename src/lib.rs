@@ -31,18 +31,18 @@ pub struct ForthCompiler {
     // This is where we remember where we put compiled words in the *memory* of the StackMachine
     // We run the interactive opcodes after these compiled words, and then erase the memory after
     // the compiled words again for the next batch of interactive opcodes.
-    #[cfg(feature="enable_reflection")]
+    #[cfg(feature = "enable_reflection")]
     pub word_addresses: HashMap<String, usize>,
-    #[cfg(not(feature="enable_reflection"))]
+    #[cfg(not(feature = "enable_reflection"))]
     word_addresses: HashMap<String, usize>,
     // This is the location in memory that points to the location after the last compiled opcode
     // So its an ideal place to run interactive compiled opcodes
     last_function: usize,
     // Remember the definition for words
-    #[cfg(feature="enable_reflection")]
+    #[cfg(feature = "enable_reflection")]
     pub word_definitions: HashMap<String, String>,
     // Remember the opcodes for words
-    #[cfg(feature="enable_reflection")]
+    #[cfg(feature = "enable_reflection")]
     pub word_opcodes: HashMap<String, Vec<Opcode>>,
 }
 
@@ -78,9 +78,9 @@ impl Default for ForthCompiler {
             ],
             word_addresses: HashMap::new(),
             last_function: 0,
-            #[cfg(feature="enable_reflection")]
+            #[cfg(feature = "enable_reflection")]
             word_definitions: HashMap::new(),
-            #[cfg(feature="enable_reflection")]
+            #[cfg(feature = "enable_reflection")]
             word_opcodes: HashMap::new(),
         }
     }
@@ -105,14 +105,14 @@ impl DeferredIfStatement {
 // This struct tracks information for Forth Loop statements
 #[derive(Debug)]
 struct DeferredDoLoopStatement {
-    prelude_start: usize,
+    _prelude_start: usize, // This is only used for debugging the internal code
     logical_start: usize,
 }
 
 impl DeferredDoLoopStatement {
-    pub fn new(prelude_start: usize, logical_start: usize) -> DeferredDoLoopStatement {
+    pub fn new(_prelude_start: usize, logical_start: usize) -> DeferredDoLoopStatement {
         DeferredDoLoopStatement {
-            prelude_start,
+            _prelude_start,
             logical_start,
         }
     }
@@ -235,8 +235,9 @@ impl ForthCompiler {
         // Move last function pointer
         self.last_function += compiled.len();
         // Remember the opcodes for reflection purposes if its enabled
-        #[cfg(feature="enable_reflection")]
-        self.word_opcodes.insert(word_name.to_owned(),compiled.clone());
+        #[cfg(feature = "enable_reflection")]
+        self.word_opcodes
+            .insert(word_name.to_owned(), compiled.clone());
         // Add the function to the opcode memory
         self.sm.st.opcodes.append(&mut compiled);
         // Remember where to find it...
@@ -245,8 +246,9 @@ impl ForthCompiler {
         //        println!("Token Memory {:?}", self.sm.st.opcodes);
         //        println!("Word Addresses {:?}", self.word_addresses);
         //        println!("Last function {}", self.last_function);
-        #[cfg(feature="enable_reflection")]
-        self.word_definitions.insert(word_name.to_owned(),format!("{:?}",tokens));
+        #[cfg(feature = "enable_reflection")]
+        self.word_definitions
+            .insert(word_name.to_owned(), format!("{:?}", tokens));
         Ok(())
     }
 

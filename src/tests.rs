@@ -91,16 +91,20 @@ fn test_intrinsics_dup() {
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
-    assert_eq!(&ol, &vec![Opcode::LDI(10),Opcode::LDI(2), Opcode::DUP, Opcode::RET]);
+    assert_eq!(
+        &ol,
+        &vec![Opcode::LDI(10), Opcode::LDI(2), Opcode::DUP, Opcode::RET]
+    );
 }
 
 #[test]
 fn test_intrinsics_dup_run() {
     let mut fc = ForthCompiler::default();
 
-    fc.execute_string("10 2 DUP", GasLimit::Limited(100)).unwrap();
+    fc.execute_string("10 2 DUP", GasLimit::Limited(100))
+        .unwrap();
 
-    assert_eq!(&fc.sm.st.number_stack, &vec![10_i64,2,2]);
+    assert_eq!(&fc.sm.st.number_stack, &vec![10_i64, 2, 2]);
 }
 
 #[test]
@@ -110,16 +114,20 @@ fn test_intrinsics_two_dup() {
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
-    assert_eq!(&ol, &vec![Opcode::LDI(10),Opcode::LDI(2), Opcode::DUP2, Opcode::RET]);
+    assert_eq!(
+        &ol,
+        &vec![Opcode::LDI(10), Opcode::LDI(2), Opcode::DUP2, Opcode::RET]
+    );
 }
 
 #[test]
 fn test_intrinsics_two_dup_run() {
     let mut fc = ForthCompiler::default();
 
-    fc.execute_string("10 2 2DUP", GasLimit::Limited(100)).unwrap();
+    fc.execute_string("10 2 2DUP", GasLimit::Limited(100))
+        .unwrap();
 
-    assert_eq!(&fc.sm.st.number_stack, &vec![10_i64,2,10,2]);
+    assert_eq!(&fc.sm.st.number_stack, &vec![10_i64, 2, 10, 2]);
 }
 
 #[test]
@@ -129,14 +137,18 @@ fn test_intrinsics_drop() {
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
-    assert_eq!(&ol, &vec![Opcode::LDI(10),Opcode::LDI(2), Opcode::DROP, Opcode::RET]);
+    assert_eq!(
+        &ol,
+        &vec![Opcode::LDI(10), Opcode::LDI(2), Opcode::DROP, Opcode::RET]
+    );
 }
 
 #[test]
 fn test_intrinsics_drop_run() {
     let mut fc = ForthCompiler::default();
 
-    fc.execute_string("10 2 DROP", GasLimit::Limited(100)).unwrap();
+    fc.execute_string("10 2 DROP", GasLimit::Limited(100))
+        .unwrap();
 
     assert_eq!(&fc.sm.st.number_stack, &vec![10_i64]);
 }
@@ -148,14 +160,24 @@ fn test_intrinsics_two_drop() {
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
-    assert_eq!(&ol, &vec![Opcode::LDI(10),Opcode::LDI(2), Opcode::DROP,Opcode::DROP, Opcode::RET]);
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(10),
+            Opcode::LDI(2),
+            Opcode::DROP,
+            Opcode::DROP,
+            Opcode::RET
+        ]
+    );
 }
 
 #[test]
 fn test_intrinsics_two_drop_run() {
     let mut fc = ForthCompiler::default();
 
-    fc.execute_string("3 10 2 2DROP", GasLimit::Limited(100)).unwrap();
+    fc.execute_string("3 10 2 2DROP", GasLimit::Limited(100))
+        .unwrap();
 
     assert_eq!(&fc.sm.st.number_stack, &vec![3_i64]);
 }
@@ -167,16 +189,27 @@ fn test_intrinsics_two_over() {
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
-    assert_eq!(&ol, &vec![Opcode::LDI(1),Opcode::LDI(2),Opcode::LDI(3),Opcode::LDI(4), Opcode::OVER2, Opcode::RET]);
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(1),
+            Opcode::LDI(2),
+            Opcode::LDI(3),
+            Opcode::LDI(4),
+            Opcode::OVER2,
+            Opcode::RET
+        ]
+    );
 }
 
 #[test]
 fn test_intrinsics_two_over_run() {
     let mut fc = ForthCompiler::default();
 
-    fc.execute_string("1 2 3 4 2OVER", GasLimit::Limited(100)).unwrap();
+    fc.execute_string("1 2 3 4 2OVER", GasLimit::Limited(100))
+        .unwrap();
 
-    assert_eq!(&fc.sm.st.number_stack, &vec![1_i64,2,3,4,1,2]);
+    assert_eq!(&fc.sm.st.number_stack, &vec![1_i64, 2, 3, 4, 1, 2]);
 }
 
 #[test]
@@ -186,16 +219,27 @@ fn test_intrinsics_two_swap() {
     let ol = fc
         .compile_tokens_compile_and_remove_word_definitions(&tokenizer)
         .unwrap();
-    assert_eq!(&ol, &vec![Opcode::LDI(1),Opcode::LDI(2),Opcode::LDI(3),Opcode::LDI(4), Opcode::SWAP2, Opcode::RET]);
+    assert_eq!(
+        &ol,
+        &vec![
+            Opcode::LDI(1),
+            Opcode::LDI(2),
+            Opcode::LDI(3),
+            Opcode::LDI(4),
+            Opcode::SWAP2,
+            Opcode::RET
+        ]
+    );
 }
 
 #[test]
 fn test_intrinsics_two_swap_run() {
     let mut fc = ForthCompiler::default();
 
-    fc.execute_string("1 2 3 4 2SWAP", GasLimit::Limited(100)).unwrap();
+    fc.execute_string("1 2 3 4 2SWAP", GasLimit::Limited(100))
+        .unwrap();
 
-    assert_eq!(&fc.sm.st.number_stack, &vec![3_i64,4,1,2]);
+    assert_eq!(&fc.sm.st.number_stack, &vec![3_i64, 4, 1, 2]);
 }
 #[test]
 fn test_i() {
