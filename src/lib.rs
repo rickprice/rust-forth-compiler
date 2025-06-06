@@ -1,27 +1,14 @@
-use rust_forth_tokenizer::ForthToken;
-use rust_forth_tokenizer::ForthTokenizer;
+use rust_forth_tokenizer::{ForthToken, ForthTokenizer};
 pub use rust_simple_stack_processor::GasLimit;
-use rust_simple_stack_processor::Opcode;
-use rust_simple_stack_processor::StackMachine;
+use rust_simple_stack_processor::{Opcode, StackMachine};
+use std::collections::HashMap;
+use std::convert::{TryFrom, TryInto};
 
 mod error;
-
 pub use error::ForthError;
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::convert::TryInto;
 
 #[cfg(test)]
 mod tests;
-
-// This macro lets you statically initialize a hashmap
-macro_rules! hashmap {
-    ($( $key: expr => $val: expr ),*) => {{
-         let mut map = ::std::collections::HashMap::new();
-         $( map.insert($key, $val); )*
-         map
-    }}
-}
 
 pub struct ForthCompiler {
     // This is the Stack Machine processor that runs the compiled Forth instructions
@@ -50,32 +37,32 @@ impl Default for ForthCompiler {
     fn default() -> ForthCompiler {
         ForthCompiler {
             sm: StackMachine::default(),
-            intrinsic_words: hashmap![
-            "SWAP" => vec![Opcode::SWAP],
-            "NOT" => vec![Opcode::NOT],
-            "ADD" => vec![Opcode::ADD],
-            "SUB" => vec![Opcode::SUB],
-            "MUL" => vec![Opcode::MUL],
-            "DIV" => vec![Opcode::DIV],
-            "DUP" => vec![Opcode::DUP],
-            "2DUP" => vec![Opcode::DUP2],
-            "TRAP" => vec![Opcode::TRAP],
-            "DROP" => vec![Opcode::DROP],
-            "2DROP" => vec![Opcode::DROP,Opcode::DROP],
-            "2OVER" => vec![Opcode::OVER2],
-            "2SWAP" => vec![Opcode::SWAP2],
-            "1+" => vec![Opcode::LDI(1),Opcode::ADD],
-            "1-" => vec![Opcode::LDI(-1),Opcode::ADD],
-            "2+" => vec![Opcode::LDI(2),Opcode::ADD],
-            "2-" => vec![Opcode::LDI(-2),Opcode::ADD],
-            "2*" => vec![Opcode::LDI(2),Opcode::MUL],
-            "2/" => vec![Opcode::LDI(2),Opcode::DIV],
-            "I" => vec![Opcode::GETLP],
-            "J" => vec![Opcode::GETLP2],
-            "AND" => vec![Opcode::AND],
-            "=" => vec![Opcode::SUB,Opcode::CMPZ],
-            "<>" => vec![Opcode::SUB,Opcode::CMPNZ]
-            ],
+            intrinsic_words: HashMap::from([
+                ("SWAP", vec![Opcode::SWAP]),
+                ("NOT", vec![Opcode::NOT]),
+                ("ADD", vec![Opcode::ADD]),
+                ("SUB", vec![Opcode::SUB]),
+                ("MUL", vec![Opcode::MUL]),
+                ("DIV", vec![Opcode::DIV]),
+                ("DUP", vec![Opcode::DUP]),
+                ("2DUP", vec![Opcode::DUP2]),
+                ("TRAP", vec![Opcode::TRAP]),
+                ("DROP", vec![Opcode::DROP]),
+                ("2DROP", vec![Opcode::DROP, Opcode::DROP]),
+                ("2OVER", vec![Opcode::OVER2]),
+                ("2SWAP", vec![Opcode::SWAP2]),
+                ("1+", vec![Opcode::LDI(1), Opcode::ADD]),
+                ("1-", vec![Opcode::LDI(-1), Opcode::ADD]),
+                ("2+", vec![Opcode::LDI(2), Opcode::ADD]),
+                ("2-", vec![Opcode::LDI(-2), Opcode::ADD]),
+                ("2*", vec![Opcode::LDI(2), Opcode::MUL]),
+                ("2/", vec![Opcode::LDI(2), Opcode::DIV]),
+                ("I", vec![Opcode::GETLP]),
+                ("J", vec![Opcode::GETLP2]),
+                ("AND", vec![Opcode::AND]),
+                ("=", vec![Opcode::SUB, Opcode::CMPZ]),
+                ("<>", vec![Opcode::SUB, Opcode::CMPNZ]),
+            ]),
             word_addresses: HashMap::new(),
             last_function: 0,
             #[cfg(feature = "enable_reflection")]
@@ -94,8 +81,8 @@ struct DeferredIfStatement {
 }
 
 impl DeferredIfStatement {
-    pub fn new(if_location: usize) -> DeferredIfStatement {
-        DeferredIfStatement {
+    pub fn new(if_location: usize) -> Self {
+        Self {
             if_location,
             else_location: None,
         }
@@ -110,8 +97,8 @@ struct DeferredDoLoopStatement {
 }
 
 impl DeferredDoLoopStatement {
-    pub fn new(_prelude_start: usize, logical_start: usize) -> DeferredDoLoopStatement {
-        DeferredDoLoopStatement {
+    pub fn new(_prelude_start: usize, logical_start: usize) -> Self {
+        Self {
             _prelude_start,
             logical_start,
         }
@@ -124,8 +111,8 @@ struct LoopExits {
 }
 
 impl LoopExits {
-    pub fn new() -> LoopExits {
-        LoopExits {
+    pub fn new() -> Self {
+        Self {
             loop_exit_locations: Vec::new(),
         }
     }
@@ -150,8 +137,8 @@ struct DeferredBeginLoopStatement {
 }
 
 impl DeferredBeginLoopStatement {
-    pub fn new(logical_start: usize) -> DeferredBeginLoopStatement {
-        DeferredBeginLoopStatement { logical_start }
+    pub fn new(logical_start: usize) -> Self {
+        Self { logical_start }
     }
 }
 
@@ -500,22 +487,22 @@ impl ForthCompiler {
                             }
                         }
                         _ => {
-                            if let Some(offset) = self.word_addresses.get(*s) {
-                                tv.push(Opcode::LDI(*offset as i64));
+                            if let Some(&offset) = self.word_addresses.get(*s) {
+                                tv.push(Opcode::LDI(offset as i64));
                                 tv.push(Opcode::CALL);
-                            } else if let Some(ol) = self.intrinsic_words.get::<str>(s) {
-                                tv.append(&mut ol.clone());
+                            } else if let Some(ol) = self.intrinsic_words.get(*s) {
+                                tv.extend_from_slice(ol);
                             } else {
-                                return Err(ForthError::UnknownToken(s.to_string()));
+                                return Err(ForthError::UnknownToken((*s).to_string()));
                             }
                         }
                     }
                 }
                 ForthToken::Colon => {
-                    panic!("Colon should never reach this function");
+                    unreachable!("Colon should never reach this function");
                 }
                 ForthToken::SemiColon => {
-                    panic!("SemiColon should never reach this function");
+                    unreachable!("SemiColon should never reach this function");
                 }
             }
         }
@@ -540,8 +527,7 @@ impl ForthCompiler {
     }
 
     pub fn execute_string(&mut self, s: &str, gas_limit: GasLimit) -> Result<(), ForthError> {
-        let tokenizer = ForthTokenizer::new(&s);
-        self.execute_tokens(&tokenizer, gas_limit)?;
-        Ok(())
+        let tokenizer = ForthTokenizer::new(s);
+        self.execute_tokens(&tokenizer, gas_limit)
     }
 }
