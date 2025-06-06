@@ -33,7 +33,9 @@ impl From<StackMachineError> for ForthError {
             StackMachineError::UnknownError => ForthError::UnknownError,
             StackMachineError::UnhandledTrap {unhandled_trap_id }=> ForthError::UnhandledTrap {unhandled_trap_id},
             StackMachineError::RanOutOfGas { gas_used, gas_limit}=> ForthError::RanOutOfGas {gas_used, gas_limit},
-            StackMachineError::NumericOverflow(_) => ForthError::InternalNumericOverflow,
+            StackMachineError::NumericOverflow { failing_opcode: _ } => ForthError::InternalNumericOverflow,
+            StackMachineError::DivisionByZero { failing_opcode: _ } => ForthError::InternalNumericOverflow,
+            StackMachineError::TryFromIntError(_) => ForthError::InternalNumericOverflow,
         }
     }
 }
