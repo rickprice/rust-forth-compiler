@@ -1,6 +1,6 @@
 [package]
 name = "rust-forth-compiler"
-version = "0.5.4"
+version = "0.6.0"
 authors = ["Frederick Price <rprice@pricemail.ca>"]
 edition = "2024"
 license = "MIT"
@@ -12,10 +12,11 @@ categories = ["embedded"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-simple-stack-processor = "0.7.1"
+rust-simple-stack-processor = "0.8"
 #rust-simple-stack-processor = { path="../rust-simple-stack-processor"}
-rust-forth-tokenizer= "0.2.1"
+rust-forth-tokenizer= "0.2"
 #rust-forth-tokenizer = { path="../rust-forth-tokenizer"}
+thiserror = "2"
 
 [features]
 enable_reflection=[]

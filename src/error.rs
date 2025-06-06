@@ -1,6 +1,7 @@
 extern crate rust_simple_stack_processor;
 
 use rust_simple_stack_processor::StackMachineError;
+use rust_simple_stack_processor::GasLimit;
 
 /// This Enum lists the errors that the Forth Interpreter might return
 #[derive(Debug)]
@@ -15,8 +16,8 @@ pub enum ForthError {
     MissingSemicolonAfterColon,
     MissingCommandAfterColon,
     SemicolonBeforeColon,
-    UnhandledTrap,
-    RanOutOfGas,
+    UnhandledTrap {unhandled_trap_id: i64},
+    RanOutOfGas {gas_used: u64, gas_limit: GasLimit},
     InternalNumericOverflow,
 }
 
@@ -29,10 +30,10 @@ impl From<StackMachineError> for ForthError {
             StackMachineError::LoopStackUnderflow => ForthError::LoopStackUnderflow,
             StackMachineError::ScratchStackUnderflow => ForthError::ScratchStackUnderflow,
             StackMachineError::InvalidCellOperation => ForthError::InvalidCellOperation,
-            StackMachineError::UnkownError => ForthError::UnknownError,
-            StackMachineError::UnhandledTrap => ForthError::UnhandledTrap,
-            StackMachineError::RanOutOfGas => ForthError::RanOutOfGas,
-            StackMachineError::NumericOverflow => ForthError::InternalNumericOverflow,
+            StackMachineError::UnknownError => ForthError::UnknownError,
+            StackMachineError::UnhandledTrap {unhandled_trap_id }=> ForthError::UnhandledTrap {unhandled_trap_id},
+            StackMachineError::RanOutOfGas { gas_used, gas_limit}=> ForthError::RanOutOfGas {gas_used, gas_limit},
+            StackMachineError::NumericOverflow(_) => ForthError::InternalNumericOverflow,
         }
     }
 }
@@ -51,8 +52,8 @@ impl From<ForthError> for i32 {
             ForthError::MissingSemicolonAfterColon => 7,
             ForthError::MissingCommandAfterColon => 8,
             ForthError::SemicolonBeforeColon => 9,
-            ForthError::UnhandledTrap => 10,
-            ForthError::RanOutOfGas => 11,
+            ForthError::UnhandledTrap {unhandled_trap_id: _} => 10,
+            ForthError::RanOutOfGas { gas_used: _, gas_limit : _}=> 11,
             ForthError::InternalNumericOverflow => 12,
         }
     }
