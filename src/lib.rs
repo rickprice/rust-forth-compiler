@@ -121,7 +121,7 @@ impl LoopExits {
         self.loop_exit_locations.push(loop_exit_location);
     }
 
-    fn fixup_loop_exits(&self, opcode_vector: &mut Vec<Opcode>) {
+    fn fixup_loop_exits(&self, opcode_vector: &mut [Opcode]) {
         let loop_exit_point = opcode_vector.len();
         for leave_point in self.loop_exit_locations.iter() {
             let jump_forward =
@@ -168,7 +168,7 @@ impl ForthCompiler {
                         let mut tvc = Vec::new();
                         let mut found_semicolon = false;
                         // Because this is an inner loop using the outer iterator, we can't use the normal for loop syntax
-                        while let Some(token) = iter.next() {
+                        for token in iter.by_ref() {
                             match token {
                                 ForthToken::SemiColon => {
                                     // We have found the end of the word definition, so compile to opcodes and put into memory...
@@ -262,7 +262,7 @@ impl ForthCompiler {
                     // Remember where we are in the list of opcodes in case we hit a IF statement, LOOP etc...
                     let current_instruction = tv.len();
 
-                    match s.as_ref() {
+                    match *s {
                         "DO" => {
                             let start_of_loop_code = current_instruction;
                             // This eats the loop parameters from the number stack...
