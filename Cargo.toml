@@ -2,6 +2,7 @@
 name = "rust-forth-compiler"
 version = "0.7.0"
 authors = ["Frederick Price <rprice@pricemail.ca>"]
+rust-version = "1.85.0"
 edition = "2024"
 license = "MIT"
 description = "A Forth compiler written in Rust"
